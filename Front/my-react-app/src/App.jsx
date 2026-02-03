@@ -1,7 +1,7 @@
 import { useState } from "react"
 import Login from "./Login"
 import Register from "./Register"
-import Feed from "./Feed"
+import Feed from "./feed"
 
 function App() {
   const [userId, setUserId] = useState(null)
