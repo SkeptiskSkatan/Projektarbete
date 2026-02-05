@@ -10,15 +10,28 @@ export default function Register() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password })
     })
+    setUsername("")
+    setPassword("")
   }
+
+
 
 return (
     <div className="auth-container">
       <div className="auth-card">
         <h2>Register</h2>
-        <input placeholder="Username" />
-        <input placeholder="Password" type="password" />
-        <button onClick={register}>Register</button>
+        <input
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <input
+          placeholder="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button type="submit" onClick={register}>Register</button>
       </div>
     </div>
   )
