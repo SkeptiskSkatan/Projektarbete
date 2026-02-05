@@ -1,6 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from database import conn
+from database import conn 
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -11,7 +11,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
     allow_credentials=True,
-    allow_methods=["*"],  
+    allow_methods=["*"],   
     allow_headers=["*"],
 )
 
@@ -29,11 +29,18 @@ class Post(BaseModel):
 
 @app.post("/register")
 def register(user: User):
+    if not user.username or not user.password:
+        raise HTTPException(
+            status_code=400,
+            detail="Username and password are required"
+        )
+
     cursor.execute(
         "INSERT INTO users (username, password) VALUES (%s, %s)",
         (user.username, user.password)
     )
     conn.commit()
+
     return {"message": "User created"}
 
 
@@ -63,10 +70,21 @@ def create_post(post: Post):
 
 @app.get("/posts")
 def get_posts():
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT posts.content, users.username
         FROM posts
         JOIN users ON posts.user_id = users.id
         ORDER BY posts.created_at DESC
     """)
-    return cursor.fetchall()
+
+    rows = cursor.fetchall()
+
+    return [
+        {
+            "content": row[0],
+            "username": row[1]
+        }
+        for row in rows
+    ]
+

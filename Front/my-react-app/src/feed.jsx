@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react"
 
 export default function Feed({ userId }) {
+  // Local state: posts from the server + current input text
   const [posts, setPosts] = useState([])
   const [content, setContent] = useState("")
 
+  // Fetch all posts from the backend
   async function fetchPosts() {
     const res = await fetch("http://localhost:8000/posts")
     const data = await res.json()
     setPosts(data)
   }
 
+  // Create a new post, then refresh the feed
   async function createPost() {
     await fetch("http://localhost:8000/posts", {
       method: "POST",
@@ -20,23 +23,40 @@ export default function Feed({ userId }) {
     fetchPosts()
   }
 
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      createPost()
+    }
+  }
+
+  // Run once on mount to load the initial posts
   useEffect(() => {
     fetchPosts()
   }, [])
 
+
   return (
     <>
-      <h2>Social Feed</h2>
+      <h2>Feed</h2>
+      {/* Controlled input: value comes from state, onChange updates state */}
       <input
-        placeholder="Det här ska inte vara här"
+        placeholder="Det"
         value={content}
         onChange={e => setContent(e.target.value)}
+        onKeyDown={handleKeyDown}
       />
       <button onClick={createPost}>Post</button>
 
-      {posts.map((p, i) => (
-        <p key={i}><b>{p[1]}</b>: {p[0]}</p>
-      ))}
+
+
+{/* Render each post */}
+{posts.map((p, i) => (
+  <p key={i}>
+    <b>{p.username}</b>: {p.content}
+  </p>
+
+))}
     </>
   )
 }
