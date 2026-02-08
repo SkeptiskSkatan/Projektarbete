@@ -27,6 +27,23 @@ class Post(BaseModel):
 
 
 
+def password_too_weak(losen):
+    if len(losen) < 4:
+        return True
+    else:
+        return False
+
+def user_already_exists(namn):
+    cursor.execute(
+        "SELECT 1 FROM users WHERE username = %s",
+        (namn,)
+    )
+    return cursor.fetchone() is not None
+
+
+
+
+
 @app.post("/register")
 def register(user: User):
     if not user.username or not user.password:
@@ -34,6 +51,18 @@ def register(user: User):
             status_code=400,
             detail="Username and password are required"
         )
+    
+    if password_too_weak(user.password):
+        raise HTTPException(
+            status_code=400,
+            detail="Password is too weak"
+    )
+
+    if user_already_exists(user.username):
+        raise HTTPException(
+            status_code=409,
+            detail="Username already exists"
+    )
 
     cursor.execute(
         "INSERT INTO users (username, password) VALUES (%s, %s)",
