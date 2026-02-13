@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from database import conn 
 import bcrypt
+import psycopg2
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -31,6 +32,16 @@ class UserLogin(BaseModel):
 class Post(BaseModel):
     content: str
     user_id: int
+
+
+# Det ändrar detta 
+def get_connection():
+    return psycopg2.connect(
+        host="localhost",
+        database="full_db",
+        user="postgres",
+        password="5DZ96PDs4U8aXs4eeTDGnVvQCwfzubJy2enxDhGw4dUHNv9wNMevUqEMQrXxxBnP"
+    )
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(
@@ -145,28 +156,34 @@ def get_posts():
     ]
 
 
-
 @app.get("/users/{user_id}")
 def get_user_profile(user_id: int):
-    cursor.execute(
-        """
+    conn = get_connection() ###
+    cursor = conn.cursor() ###
+
+    cursor.execute("""
         SELECT id, username, email, created_at
         FROM users
         WHERE id = %s
-        """,
-        (user_id,)
-    )
-    user = cursor.fetchone()
+    """, (user_id,))
 
-    if not user:
+    row = cursor.fetchone()
+
+    cursor.close() ###
+    conn.close() ###
+
+    if row is None:
         raise HTTPException(status_code=404, detail="User not found")
 
+    id, username, email, created_at = row
+
     return {
-        "id": user[0],
-        "username": user[1],
-        "email": user[2],
-        "created_at": user[3]
+        "id": id,
+        "username": username,
+        "email": email,
+        "created_at": created_at
     }
+
 
 
 @app.get("/users/{user_id}/posts")
