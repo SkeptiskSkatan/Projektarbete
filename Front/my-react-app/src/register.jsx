@@ -1,4 +1,6 @@
 import { useState } from "react"
+import "./runk.css";
+
 
 export default function Register() {
   const [username, setUsername] = useState("")
@@ -17,7 +19,9 @@ return (
       <div className="auth-card">
         <h2>Register</h2>
         <input placeholder="Username" />
+        <br />
         <input placeholder="Password" type="password" />
+        <br />
         <button onClick={register}>Register</button>
       </div>
     </div>

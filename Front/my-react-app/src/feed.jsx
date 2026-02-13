@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react"
+import "./runk.css";
+
 
 export default function Feed({ userId }) {
   const [posts, setPosts] = useState([])
@@ -26,9 +28,9 @@ export default function Feed({ userId }) {
 
   return (
     <>
-      <h2>Social Feed</h2>
+      <h2>Feed</h2>
       <input
-        placeholder="Det här ska inte vara här"
+        placeholder="KIM YONG UN I'M KIM YONG UN"
         value={content}
         onChange={e => setContent(e.target.value)}
       />
