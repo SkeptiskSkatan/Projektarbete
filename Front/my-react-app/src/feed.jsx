@@ -1,25 +1,39 @@
 import { useEffect, useState } from "react"
 
 export default function Feed({ userId }) {
-  // Local state: posts from the server + current input text
   const [posts, setPosts] = useState([])
   const [content, setContent] = useState("")
+  const [message, setMessage] = useState("")
 
-  // Fetch all posts from the backend
   async function fetchPosts() {
     const res = await fetch("http://localhost:8000/posts")
     const data = await res.json()
     setPosts(data)
   }
 
-  // Create a new post, then refresh the feed
   async function createPost() {
-    await fetch("http://localhost:8000/posts", {
+    if (!content.trim()) return
+    if (!userId) {
+      setMessage("You must be logged in to post")
+      return
+    }
+
+    const res = await fetch("http://localhost:8000/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, user_id: userId })
+      body: JSON.stringify({
+        content,
+        user_id: userId
+      })
     })
+
+    if (!res.ok) {
+      setMessage("Could not create post")
+      return
+    }
+
     setContent("")
+    setMessage("")
     fetchPosts()
   }
 
@@ -30,33 +44,30 @@ export default function Feed({ userId }) {
     }
   }
 
-  // Run once on mount to load the initial posts
   useEffect(() => {
     fetchPosts()
   }, [])
 
-
   return (
     <>
       <h2>Feed</h2>
-      {/* Controlled input: value comes from state, onChange updates state */}
+
       <input
         placeholder="Det"
         value={content}
         onChange={e => setContent(e.target.value)}
         onKeyDown={handleKeyDown}
       />
+
       <button onClick={createPost}>Post</button>
 
+      {message && <p>{message}</p>}
 
-
-{/* Render each post */}
-{posts.map((p, i) => (
-  <p key={i}>
-    <b>{p.username}</b>: {p.content}
-  </p>
-
-))}
+      {posts.map((p, i) => (
+        <p key={i}>
+          <b>{p.username}</b>: {p.content}
+        </p>
+      ))}
     </>
   )
 }
