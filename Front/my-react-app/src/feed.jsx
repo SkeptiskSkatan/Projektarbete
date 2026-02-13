@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import "./main.css";
 
 export default function Feed({ userId }) {
   const [posts, setPosts] = useState([])
