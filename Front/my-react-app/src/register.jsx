@@ -18,7 +18,7 @@ export default function Register() {
         password
       })
     })
-<<<<<<< HEAD
+
     setUsername("")
     setPassword("")
   }
@@ -36,7 +36,7 @@ return (
         <button onClick={register}>Register</button>
 
         {message && <p>{message}</p>}
->>>>>>> name
+
       </div>
     </div>
   )
