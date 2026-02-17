@@ -37,6 +37,11 @@ class LikePost(BaseModel):
     user_id: int
     post_id: int
 
+class CommentCreate(BaseModel):
+    content: str
+    user_id: int
+    post_id: int
+
 # -------------------
 # HELPERS
 # -------------------
@@ -229,3 +234,51 @@ def get_user_posts(user_id: int):
     rows = cursor.fetchall()
 
     return [{"content": row[0], "created_at": row[1]} for row in rows]
+
+
+
+# -------------------
+# COMMENTS
+# -------------------
+
+@app.post("/comments")
+def create_comment(comment: CommentCreate):
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO comments (content, user_id, post_id) VALUES (%s, %s, %s)",
+            (comment.content, comment.user_id, comment.post_id)
+        )
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
+    return {"message": "Comment created"}
+
+
+@app.get("/posts/{post_id}/comments")
+def get_comments(post_id: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT comments.content, users.username
+            FROM comments
+            JOIN users ON comments.user_id = users.id
+            WHERE comments.post_id = %s
+            ORDER BY comments.created_at ASC
+        """, (post_id,))
+        rows = cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+
+    return [
+        {
+            "content": row[0],
+            "username": row[1]
+        }
+        for row in rows
+    ]

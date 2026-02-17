@@ -20,6 +20,8 @@ export default function Register({ switchToLogin }) {
       setMessage(data.detail || "Registration failed");
       return;
     }
+  switchToLogin(); // Om kontot skapades → gå direkt till login-sidan
+
 
     setMessage("Account created! You can now login.");
     setUsername("");
