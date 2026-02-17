@@ -33,6 +33,10 @@ class Post(BaseModel):
     content: str
     user_id: int
 
+class CommentCreate(BaseModel):
+    content: str
+    user_id: int
+    post_id: int
 
 # Det ändrar detta 
 def get_connection():
@@ -139,7 +143,7 @@ def create_post(post: Post):
 def get_posts():
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT posts.content, users.username
+        SELECT posts.id, posts.content, users.username
         FROM posts
         JOIN users ON posts.user_id = users.id
         ORDER BY posts.created_at DESC
@@ -149,8 +153,9 @@ def get_posts():
 
     return [
         {
-            "content": row[0],
-            "username": row[1]
+            "id": row[0],
+            "content": row[1],
+            "username": row[2]
         }
         for row in rows
     ]
@@ -188,14 +193,72 @@ def get_user_profile(user_id: int):
 
 @app.get("/users/{user_id}/posts")
 def get_user_posts(user_id: int):
-    cursor.execute(
-        """
-        SELECT content, created_at
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, content, created_at
         FROM posts
         WHERE user_id = %s
         ORDER BY created_at DESC
+    """, (user_id,))
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return [
+        {
+            "id": row[0],          
+            "content": row[1],
+            "created_at": row[2]
+        }
+        for row in rows
+    ]
+
+
+@app.post("/comments")
+def create_comment(comment: CommentCreate):
+
+    if not comment.content:
+        raise HTTPException(status_code=400, detail="Content is required")
+
+    # Optional: check if user exists
+    cursor.execute("SELECT 1 FROM users WHERE id = %s", (comment.user_id,))
+    if not cursor.fetchone():
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Optional: check if post exists
+    cursor.execute("SELECT 1 FROM posts WHERE id = %s", (comment.post_id,))
+    if not cursor.fetchone():
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    cursor.execute(
+        """
+        INSERT INTO comments (content, user_id, post_id)
+        VALUES (%s, %s, %s)
         """,
-        (user_id,)
+        (comment.content, comment.user_id, comment.post_id)
+    )
+    conn.commit()
+
+    return {"message": "Comment created"}
+
+@app.get("/posts/{post_id}/comments")
+def get_comments(post_id: int):
+
+    cursor.execute(
+        """
+        SELECT comments.content,
+               comments.created_at,
+               users.username
+        FROM comments
+        JOIN users ON comments.user_id = users.id
+        WHERE comments.post_id = %s
+        ORDER BY comments.created_at DESC
+        """,
+        (post_id,)
     )
 
     rows = cursor.fetchall()
@@ -203,8 +266,8 @@ def get_user_posts(user_id: int):
     return [
         {
             "content": row[0],
-            "created_at": row[1]
+            "created_at": row[1],
+            "username": row[2]
         }
         for row in rows
     ]
-
