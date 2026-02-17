@@ -1,4 +1,6 @@
 import { useState } from "react"
+import "./runk.css";
+
 
 export default function Register() {
   const [username, setUsername] = useState("")
@@ -27,53 +29,10 @@ return (
     <div className="auth-container">
       <div className="auth-card">
         <h2>Register</h2>
-=======
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      setMessage(data.detail || "Something went wrong")
-      return
-    }
-
-    setMessage("User created")
-    setUsername("")
-    setEmail("")
-    setPassword("")
-  }
-
-  return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2>Register</h2>
-
->>>>>>> name
-        <input
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-<<<<<<< HEAD
-=======
-
-        <input
-          placeholder="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-
->>>>>>> name
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-<<<<<<< HEAD
-        <button type="submit" onClick={register}>Register</button>
-=======
-
+        <input placeholder="Username" />
+        <br />
+        <input placeholder="Password" type="password" />
+        <br />
         <button onClick={register}>Register</button>
 
         {message && <p>{message}</p>}

@@ -1,10 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from database import conn 
-<<<<<<< HEAD
-=======
 import bcrypt
->>>>>>> name
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -61,15 +58,6 @@ def user_or_email_exists(username, email):
 
 
 @app.post("/register")
-<<<<<<< HEAD
-def register(user: User):
-    if not user.username or not user.password:
-        raise HTTPException(
-            status_code=400,
-            detail="Username and password are required"
-        )
-
-=======
 def register(user: UserRegister):
     if not user.username or not user.email or not user.password:
         raise HTTPException(
@@ -91,7 +79,6 @@ def register(user: UserRegister):
 
     password_hash = hash_password(user.password)
 
->>>>>>> name
     cursor.execute(
         """
         INSERT INTO users (username, email, password_hash)
@@ -157,8 +144,6 @@ def get_posts():
         for row in rows
     ]
 
-<<<<<<< HEAD
-=======
 
 
 @app.get("/users/{user_id}")
@@ -206,4 +191,3 @@ def get_user_posts(user_id: int):
         for row in rows
     ]
 
->>>>>>> name

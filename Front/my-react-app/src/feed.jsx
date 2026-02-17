@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react"
+import "./runk.css";
+
 
 export default function Feed({ userId }) {
   // Local state: posts from the server + current input text
@@ -47,10 +49,6 @@ export default function Feed({ userId }) {
     }
   }
 
-<<<<<<< HEAD
-  // Run once on mount to load the initial posts
-=======
->>>>>>> name
   useEffect(() => {
     fetchPosts()
   }, [])
@@ -59,13 +57,8 @@ export default function Feed({ userId }) {
   return (
     <>
       <h2>Feed</h2>
-<<<<<<< HEAD
-      {/* Controlled input: value comes from state, onChange updates state */}
-=======
-
->>>>>>> name
       <input
-        placeholder="Det"
+        placeholder="KIM YONG UN I'M KIM YONG UN"
         value={content}
         onChange={e => setContent(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -73,17 +66,6 @@ export default function Feed({ userId }) {
 
       <button onClick={createPost}>Post</button>
 
-<<<<<<< HEAD
-
-
-{/* Render each post */}
-{posts.map((p, i) => (
-  <p key={i}>
-    <b>{p.username}</b>: {p.content}
-  </p>
-
-))}
-=======
       {message && <p>{message}</p>}
 
       {posts.map((p, i) => (
@@ -91,7 +73,6 @@ export default function Feed({ userId }) {
           <b>{p.username}</b>: {p.content}
         </p>
       ))}
->>>>>>> name
     </>
   )
 }

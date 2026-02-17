@@ -1,4 +1,6 @@
 import { useState } from "react"
+import "./runk.css";
+
 
 export default function Login({ setUserId }) {
   const [username, setUsername] = useState("")
@@ -29,29 +31,10 @@ export default function Login({ setUserId }) {
     <div className="auth-container">
       <div className="auth-card">
         <h2>Login</h2>
-<<<<<<< HEAD
-=======
-
->>>>>>> name
-        <input
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-<<<<<<< HEAD
-=======
-
->>>>>>> name
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-<<<<<<< HEAD
-=======
-
->>>>>>> name
+        <input placeholder="Username" />
+        <br />
+        <input placeholder="Password" type="password" />
+        <br />
         <button onClick={login}>Login</button>
 
         {message && <p>{message}</p>}
