@@ -1,21 +1,118 @@
 import { useState } from "react"
-import Login from "./Login"
-import Register from "./Register"
+import Login from "./login"
+import Register from "./register"
 import Feed from "./feed"
+import Profile from "./profile"
+import "./main.css"
 
 function App() {
   const [userId, setUserId] = useState(null)
+  const [showLogin, setShowLogin] = useState(true)
+  const [view, setView] = useState("feed")
+  const [selectedUserId, setSelectedUserId] = useState(null)
 
+  // 🔥 styr popupen
+  const [showWelcome, setShowWelcome] = useState(true)
+
+  function logout() {
+    setUserId(null)
+    setView("feed")
+    setSelectedUserId(null)
+    setShowWelcome(true)
+  }
+
+  // ======================
+  // NOT LOGGED IN
+  // ======================
   if (!userId) {
     return (
       <>
-        <Login setUserId={setUserId} />
-        <Register />
+        {showWelcome && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <h2>Welcome 👋</h2>
+              <p>Please login or create an account to continue.</p>
+
+              <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+                <button
+                  onClick={() => {
+                    setShowLogin(true)
+                    setShowWelcome(false)
+                  }}
+                >
+                  Login
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowLogin(false)
+                    setShowWelcome(false)
+                  }}
+                >
+                  Register
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!showWelcome && (
+          <div style={{ display: "flex", gap: "2rem" }}>
+            {showLogin ? (
+              <Login
+                setUserId={setUserId}
+                switchToRegister={() => setShowLogin(false)}
+              />
+            ) : (
+              <Register
+                switchToLogin={() => setShowLogin(true)}
+              />
+            )}
+          </div>
+        )}
       </>
     )
   }
 
-  return <Feed userId={userId} />
+  // ======================
+  // LOGGED IN
+  // ======================
+  return (
+    <>
+      <nav style={{ marginBottom: "1rem" }}>
+        <button
+          onClick={() => {
+            setView("feed")
+            setSelectedUserId(null)
+          }}
+        >
+          Feed
+        </button>
+
+        <button
+          onClick={() => {
+            setView("profile")
+            setSelectedUserId(null)
+          }}
+        >
+          My Profile
+        </button>
+
+        <button onClick={logout}>Logout</button>
+      </nav>
+
+      {selectedUserId ? (
+        <Profile
+          userId={selectedUserId}
+          goBack={() => setSelectedUserId(null)}
+        />
+      ) : view === "feed" ? (
+        <Feed userId={userId} viewProfile={setSelectedUserId} />
+      ) : (
+        <Profile userId={userId} />
+      )}
+    </>
+  )
 }
 
 export default App
