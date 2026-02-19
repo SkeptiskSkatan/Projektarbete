@@ -38,6 +38,10 @@ class CommentCreate(BaseModel):
     user_id: int
     post_id: int
 
+class FollowRequest(BaseModel):
+    follower_id: int
+    following_id: int
+
 # Det ändrar detta 
 def get_connection():
     return psycopg2.connect(
@@ -272,3 +276,50 @@ def get_comments(post_id: int):
         }
         for row in rows
     ]
+
+@app.post("/follow")
+def follow_user(req: FollowRequest):
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        INSERT INTO followers (follower_id, following_id) 
+        VALUES (%s, %s) ON CONFLICT DO NOTHING
+    """, (req.follower_id, req.following_id))
+    conn.commit()
+    return {"message": "Followed"}
+
+@app.post("/unfollow")
+def unfollow_user(req: FollowRequest):
+    cursor = conn.cursor()
+    cursor.execute("""
+        DELETE FROM followers 
+        WHERE follower_id = %s AND following_id = %s
+    """, (req.follower_id, req.following_id))
+    conn.commit()
+    return {"message": "Unfollowed"}
+
+@app.get("/is_following/{follower_id}/{following_id}")
+def is_following(follower_id: int, following_id: int):
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 1 FROM followers 
+        WHERE follower_id = %s AND following_id = %s
+    """, (follower_id, following_id))
+    return {"is_following": cursor.fetchone() is not None}
+
+
+@app.get("/users/{user_id}/follow_stats")
+def get_follow_stats(user_id: int):
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(*) FROM followers WHERE following_id = %s", (user_id,))
+    followers_count = cursor.fetchone()[0]
+    
+    
+    cursor.execute("SELECT COUNT(*) FROM followers WHERE follower_id = %s", (user_id,))
+    following_count = cursor.fetchone()[0]
+    
+    return {
+        "followers_count": followers_count,
+        "following_count": following_count
+    }

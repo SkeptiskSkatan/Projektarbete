@@ -87,7 +87,7 @@ export default function Feed({ userId, openUserProfile }) {
       {message && <p>{message}</p>}
 
 
-//////////////////////////// This is all the posts
+{/* All the posts */}
 
     {posts.map((p) => (
       <div
@@ -114,7 +114,7 @@ export default function Feed({ userId, openUserProfile }) {
         </div>
      </div>
     ))}
-//////////\\\\\\\\\\\\\ This is all the posts
+{/* All the posts end */}
 
       {selectedPost && (
         <div style={overlayStyle}>

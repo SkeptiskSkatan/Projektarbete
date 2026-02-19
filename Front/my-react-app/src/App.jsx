@@ -56,7 +56,8 @@ function openUserProfile(id) {
         <Feed userId={userId} openUserProfile={openUserProfile} />
       )}
       {view === "profile" && <Profile userId={userId} />}
-      {view === "userProfile" && selectedUserId && (<Profile userId={selectedUserId} />
+      {view === "userProfile" && selectedUserId && (<Profile userId={selectedUserId} currentUserId={userId} />
+
 )}
     </>
   )
