@@ -86,20 +86,32 @@ export default function Feed({ userId }) {
 
       {message && <p>{message}</p>}
 
-      {posts.map((p) => (
-        <div
-          key={p.id}
-          onClick={() => openPost(p)}
-          style={{
-            border: "1px solid gray",
-            padding: "10px",
-            margin: "10px 0",
-            cursor: "pointer"
-          }}
-        >
-          <b>{p.username}</b>: {p.content}
+    {posts.map((p) => (
+      <div
+        key={p.id}
+        className="post"
+      >
+        <div className="post-header">
+          <b>{p.username}</b>
         </div>
-      ))}
+
+        <div onClick={() => openPost(p)} className="post-content">
+          {p.content}
+        </div>
+
+        <div className="post-actions">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              likePost(p.id);
+            }}
+         >
+            Like
+          </button>
+        </div>
+     </div>
+    ))}
+
 
       {selectedPost && (
         <div style={overlayStyle}>
