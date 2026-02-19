@@ -7,14 +7,27 @@ export default function Profile({ userId }) {
   const [comments, setComments] = useState([])
   const [commentInput, setCommentInput] = useState("")
 
+  // Guard: if userId is null or undefined
+  if (!userId) return <p>Loading profile...</p>
+
   useEffect(() => {
+    // Fetch user info
     fetch(`http://localhost:8000/users/${userId}`)
       .then(res => res.json())
       .then(setUser)
+      .catch(err => {
+        console.error(err)
+        setUser(null)
+      })
 
+    // Fetch user's posts
     fetch(`http://localhost:8000/users/${userId}/posts`)
       .then(res => res.json())
       .then(setPosts)
+      .catch(err => {
+        console.error(err)
+        setPosts([])
+      })
   }, [userId])
 
   async function fetchComments(postId) {
@@ -35,7 +48,7 @@ export default function Profile({ userId }) {
   }
 
   async function createComment() {
-    if (!commentInput.trim()) return
+    if (!commentInput.trim() || !selectedPost) return
 
     await fetch("http://localhost:8000/comments", {
       method: "POST",
@@ -66,10 +79,7 @@ export default function Profile({ userId }) {
       {posts.map((p) => (
         <div
           key={p.id}
-          onClick={(e) => {
-            e.stopPropagation()
-            openPost(p)
-          }}
+          onClick={(e) => { e.stopPropagation(); openPost(p) }}
           style={{
             border: "1px solid gray",
             padding: "10px",
@@ -81,8 +91,7 @@ export default function Profile({ userId }) {
         </div>
       ))}
 
-      {/* MODAL RENDERED LAST AND FULLY ISOLATED */}
-      {selectedPost !== null && (
+      {selectedPost && (
         <div
           style={overlayStyle}
           onClick={closeModal}

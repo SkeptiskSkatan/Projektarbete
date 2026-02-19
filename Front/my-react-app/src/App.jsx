@@ -8,11 +8,21 @@ function App() {
   const [userId, setUserId] = useState(null)
   const [showLogin, setShowLogin] = useState(true)
   const [view, setView] = useState("feed")
+  const [selectedUserId, setSelectedUserId] = useState(null)
 
   function logout() {
     setUserId(null)
     setView("feed")
   }
+
+function openUserProfile(id) {
+  if (id === userId) {
+    setView("profile")
+  } else {
+    setSelectedUserId(id)
+    setView("userProfile")
+  }
+}
 
   // NOT LOGGED IN
   if (!userId) {
@@ -27,9 +37,7 @@ function App() {
         </div>
 
         <button onClick={() => setShowLogin(!showLogin)}>
-          {showLogin
-            ? "Register"
-            : "Login"}
+          {showLogin ? "Register" : "Login"}
         </button>
       </>
     )
@@ -44,8 +52,12 @@ function App() {
         <button onClick={logout}>Logout</button>
       </nav>
 
-      {view === "feed" && <Feed userId={userId} />}
+      {view === "feed" && (
+        <Feed userId={userId} openUserProfile={openUserProfile} />
+      )}
       {view === "profile" && <Profile userId={userId} />}
+      {view === "userProfile" && selectedUserId && (<Profile userId={selectedUserId} />
+)}
     </>
   )
 }

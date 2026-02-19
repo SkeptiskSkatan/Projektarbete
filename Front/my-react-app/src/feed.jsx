@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import "./main.css";
 
-export default function Feed({ userId }) {
+export default function Feed({ userId, openUserProfile }) {
   const [posts, setPosts] = useState([])
   const [content, setContent] = useState("")
   const [message, setMessage] = useState("")
@@ -87,15 +87,15 @@ export default function Feed({ userId }) {
       {message && <p>{message}</p>}
 
 
-
 //////////////////////////// This is all the posts
+
     {posts.map((p) => (
       <div
         key={p.id}
         className="post"
       >
         <div className="post-header">
-          <b>{p.username}</b>
+          <b onClick={(e) =>{ e.stopPropagation(); openUserProfile(p.user_id);}}  >{p.username}</b>
         </div>
 
         <div onClick={() => openPost(p)} className="post-content">

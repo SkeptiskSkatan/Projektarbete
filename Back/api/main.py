@@ -143,7 +143,7 @@ def create_post(post: Post):
 def get_posts():
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT posts.id, posts.content, users.username
+        SELECT posts.id, posts.content, users.username, posts.user_id
         FROM posts
         JOIN users ON posts.user_id = users.id
         ORDER BY posts.created_at DESC
@@ -155,7 +155,8 @@ def get_posts():
         {
             "id": row[0],
             "content": row[1],
-            "username": row[2]
+            "username": row[2],
+            "user_id": row[3] # Now the frontend knows WHO posted
         }
         for row in rows
     ]
