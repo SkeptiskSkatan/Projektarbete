@@ -112,7 +112,7 @@ export default function Feed({ userId, openUserProfile }) {
           onChange={e => setContent(e.target.value)}
         />
         <button onClick={createPost}>Post</button>
-        {message && <p style={{ color: "red" }}>{message}</p>}
+        {message && <p>{message}</p>}
       </div>
 
       {/* Post List */}
@@ -124,7 +124,7 @@ export default function Feed({ userId, openUserProfile }) {
                 e.stopPropagation(); 
                 openUserProfile(p.user_id); 
               }}
-              style={{ cursor: "pointer", color: "blue" }}
+              
             >
               {p.username}
             </b>
@@ -161,14 +161,14 @@ export default function Feed({ userId, openUserProfile }) {
           Load More
         </button>
       ) : (
-        <p style={{ textAlign: "center", color: "gray" }}>No more posts to show.</p>
+        <p>No more posts to show.</p>
       )}
 
       {/* Modal for Post Details & Comments */}
       {selectedPost && (
-        <div style={overlayStyle} onClick={closeModal}>
-          <div style={modalStyle} onClick={e => e.stopPropagation()}>
-            <button onClick={closeModal} style={{ float: "right" }}>
+        <div class="overlayStyle" onClick={closeModal}>
+          <div class="modalStyle" onClick={e => e.stopPropagation()}>
+            <button onClick={closeModal}>
               X
             </button>
 
@@ -178,7 +178,7 @@ export default function Feed({ userId, openUserProfile }) {
             <hr />
 
             <h4>Comments</h4>
-            <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+            <div>
               {comments.map((c, i) => (
                 <p key={i}>
                   <b>{c.username}</b>: {c.content}
@@ -188,10 +188,9 @@ export default function Feed({ userId, openUserProfile }) {
 
             <div style={{ marginTop: "15px" }}>
               <input
-                placeholder="Write a comment..."
+                placeholder="Comment"
                 value={commentInput}
                 onChange={e => setCommentInput(e.target.value)}
-                style={{ width: "70%" }}
               />
               <button onClick={createComment}>Comment</button>
             </div>
@@ -201,4 +200,3 @@ export default function Feed({ userId, openUserProfile }) {
     </>
   )
 }
-
