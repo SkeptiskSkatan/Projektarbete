@@ -8,11 +8,39 @@ export default function Feed({ userId, openUserProfile }) {
   const [comments, setComments] = useState([])
   const [selectedPost, setSelectedPost] = useState(null)
   const [commentInput, setCommentInput] = useState("")
+  
+  // Pagination states
+  const [skip, setSkip] = useState(0) 
+  const [hasMore, setHasMore] = useState(true)
+  const LIMIT = 10
 
-  async function fetchPosts() {
-    const res = await fetch("http://localhost:8000/posts")
-    const data = await res.json()
-    setPosts(data)
+  /**
+   * Fetches posts from the backend.
+   * @param {boolean} isInitial - If true, resets the feed (used for first load or after posting).
+   */
+  async function fetchPosts(isInitial = false) {
+    const currentSkip = isInitial ? 0 : skip
+    
+    try {
+      const res = await fetch(`http://localhost:8000/posts?limit=${LIMIT}&skip=${currentSkip}`)
+      const data = await res.json()
+
+      if (isInitial) {
+        setPosts(data)
+        setSkip(LIMIT)
+        setHasMore(data.length === LIMIT) // If we got exactly the limit, there might be more
+      } else {
+        setPosts(prev => [...prev, ...data])
+        setSkip(prev => prev + LIMIT)
+        
+        // If the backend returns fewer items than requested, we've hit the end
+        if (data.length < LIMIT) {
+          setHasMore(false)
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch posts:", err)
+    }
   }
 
   async function fetchComments(postId) {
@@ -38,7 +66,8 @@ export default function Feed({ userId, openUserProfile }) {
     })
 
     setContent("")
-    fetchPosts()
+    // Reset the feed to show the new post at the top
+    fetchPosts(true)
   }
 
   async function createComment() {
@@ -69,56 +98,76 @@ export default function Feed({ userId, openUserProfile }) {
   }
 
   useEffect(() => {
-    fetchPosts()
+    fetchPosts(true)
   }, [])
 
   return (
     <>
       <h2>Feed</h2>
 
-      <input
-        placeholder="Det"
-        value={content}
-        onChange={e => setContent(e.target.value)}
-      />
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          placeholder="Det"
+          value={content}
+          onChange={e => setContent(e.target.value)}
+        />
+        <button onClick={createPost}>Post</button>
+        {message && <p style={{ color: "red" }}>{message}</p>}
+      </div>
 
-      <button onClick={createPost}>Post</button>
+      {/* Post List */}
+      {posts.map((p) => (
+        <div key={p.id} className="post">
+          <div className="post-header">
+            <b 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                openUserProfile(p.user_id); 
+              }}
+              style={{ cursor: "pointer", color: "blue" }}
+            >
+              {p.username}
+            </b>
+          </div>
 
-      {message && <p>{message}</p>}
+          <div onClick={() => openPost(p)} className="post-content">
+            {p.content}
+          </div>
 
-
-{/* All the posts */}
-
-    {posts.map((p) => (
-      <div
-        key={p.id}
-        className="post"
-      >
-        <div className="post-header">
-          <b onClick={(e) =>{ e.stopPropagation(); openUserProfile(p.user_id);}}  >{p.username}</b>
+          <div className="post-like">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                // likePost(p.id); // Placeholder for your like function
+              }}
+            >
+              Like
+            </button>
+          </div>
         </div>
+      ))}
 
-        <div onClick={() => openPost(p)} className="post-content">
-          {p.content}
-        </div>
+      {/* Load More Button */}
+      {hasMore ? (
+        <button 
+          onClick={() => fetchPosts(false)} 
+          style={{ 
+            width: "100%", 
+            padding: "10px", 
+            margin: "20px 0", 
+            cursor: "pointer" 
+          }}
+        >
+          Load More
+        </button>
+      ) : (
+        <p style={{ textAlign: "center", color: "gray" }}>No more posts to show.</p>
+      )}
 
-        <div className="post-actions">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              likePost(p.id);
-            }}
-         >
-            Like
-          </button>
-        </div>
-     </div>
-    ))}
-{/* All the posts end */}
-
+      {/* Modal for Post Details & Comments */}
       {selectedPost && (
-        <div style={overlayStyle}>
-          <div style={modalStyle}>
+        <div style={overlayStyle} onClick={closeModal}>
+          <div style={modalStyle} onClick={e => e.stopPropagation()}>
             <button onClick={closeModal} style={{ float: "right" }}>
               X
             </button>
@@ -129,22 +178,23 @@ export default function Feed({ userId, openUserProfile }) {
             <hr />
 
             <h4>Comments</h4>
+            <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+              {comments.map((c, i) => (
+                <p key={i}>
+                  <b>{c.username}</b>: {c.content}
+                </p>
+              ))}
+            </div>
 
-            {comments.map((c, i) => (
-              <p key={i}>
-                <b>{c.username}</b>: {c.content}
-              </p>
-            ))}
-
-            <input
-              placeholder="Write a comment..."
-              value={commentInput}
-              onChange={e => setCommentInput(e.target.value)}
-            />
-
-            <button onClick={createComment}>
-              Comment
-            </button>
+            <div style={{ marginTop: "15px" }}>
+              <input
+                placeholder="Write a comment..."
+                value={commentInput}
+                onChange={e => setCommentInput(e.target.value)}
+                style={{ width: "70%" }}
+              />
+              <button onClick={createComment}>Comment</button>
+            </div>
           </div>
         </div>
       )}
@@ -152,21 +202,3 @@ export default function Feed({ userId, openUserProfile }) {
   )
 }
 
-const overlayStyle = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  width: "100%",
-  height: "100%",
-  backgroundColor: "rgba(0,0,0,0.5)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center"
-}
-
-const modalStyle = {
-  backgroundColor: "white",
-  padding: "20px",
-  width: "400px",
-  borderRadius: "10px"
-}

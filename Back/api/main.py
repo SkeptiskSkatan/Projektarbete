@@ -144,14 +144,16 @@ def create_post(post: Post):
 
 
 @app.get("/posts")
-def get_posts():
+def get_posts(limit: int = 10, skip: int = 0):
     cursor = conn.cursor()
+    # Use LIMIT and OFFSET for pagination
     cursor.execute("""
         SELECT posts.id, posts.content, users.username, posts.user_id
         FROM posts
         JOIN users ON posts.user_id = users.id
         ORDER BY posts.created_at DESC
-    """)
+        LIMIT %s OFFSET %s
+    """, (limit, skip))
 
     rows = cursor.fetchall()
 
@@ -160,7 +162,7 @@ def get_posts():
             "id": row[0],
             "content": row[1],
             "username": row[2],
-            "user_id": row[3] # Now the frontend knows WHO posted
+            "user_id": row[3]
         }
         for row in rows
     ]
