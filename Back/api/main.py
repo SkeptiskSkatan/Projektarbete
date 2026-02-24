@@ -42,6 +42,10 @@ class FollowRequest(BaseModel):
     follower_id: int
     following_id: int
 
+class LikeRequest(BaseModel):
+    user_id: int
+    post_id: int
+
 # Det ändrar detta 
 def get_connection():
     return psycopg2.connect(
@@ -146,7 +150,6 @@ def create_post(post: Post):
 @app.get("/posts")
 def get_posts(limit: int = 10, skip: int = 0):
     cursor = conn.cursor()
-    # Use LIMIT and OFFSET for pagination
     cursor.execute("""
         SELECT posts.id, posts.content, users.username, posts.user_id
         FROM posts
@@ -154,18 +157,16 @@ def get_posts(limit: int = 10, skip: int = 0):
         ORDER BY posts.created_at DESC
         LIMIT %s OFFSET %s
     """, (limit, skip))
-
     rows = cursor.fetchall()
+    return [{
 
-    return [
-        {
-            "id": row[0],
-            "content": row[1],
-            "username": row[2],
-            "user_id": row[3]
-        }
-        for row in rows
-    ]
+            "id": r[0], 
+            "content": r[1], 
+            "username": r[2], 
+            "user_id": r[3]}
+
+            for r in rows
+        ]
 
 
 @app.get("/users/{user_id}")
@@ -199,29 +200,29 @@ def get_user_profile(user_id: int):
 
 
 @app.get("/users/{user_id}/posts")
-def get_user_posts(user_id: int):
+def get_user_posts(user_id: int, limit: int = 10, skip: int = 0):
     conn = get_connection()
     cursor = conn.cursor()
-
     cursor.execute("""
-        SELECT id, content, created_at
+        SELECT posts.id, posts.content, users.username, posts.user_id
         FROM posts
-        WHERE user_id = %s
-        ORDER BY created_at DESC
-    """, (user_id,))
-
+        JOIN users ON posts.user_id = users.id
+        WHERE posts.user_id = %s
+        ORDER BY posts.created_at DESC
+        LIMIT %s OFFSET %s
+    """, (user_id, limit, skip))
     rows = cursor.fetchall()
-
     cursor.close()
     conn.close()
-
     return [
         {
-            "id": row[0],          
-            "content": row[1],
-            "created_at": row[2]
-        }
-        for row in rows
+            "id": r[0], 
+            "content": r[1], 
+            "username": r[2], 
+            "user_id": r[3]
+        } 
+            
+        for r in rows
     ]
 
 
@@ -324,4 +325,48 @@ def get_follow_stats(user_id: int):
     return {
         "followers_count": followers_count,
         "following_count": following_count
+    }
+
+@app.post("/like")
+def like_post(req: LikeRequest):
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO likes (user_id, post_id)
+        VALUES (%s, %s)
+        ON CONFLICT DO NOTHING
+    """, (req.user_id, req.post_id))
+    conn.commit()
+    return {"message": "Liked"}
+
+@app.post("/unlike")
+def unlike_post(req: LikeRequest):
+    cursor = conn.cursor()
+    cursor.execute("""
+        DELETE FROM likes
+        WHERE user_id = %s AND post_id = %s
+    """, (req.user_id, req.post_id))
+    conn.commit()
+    return {"message": "Unliked"}
+
+@app.get("/posts/{post_id}/likes/{user_id}")
+def get_post_likes(post_id: int, user_id: int):
+    cursor = conn.cursor()
+
+    # Count likes
+    cursor.execute(
+        "SELECT COUNT(*) FROM likes WHERE post_id = %s",
+        (post_id,)
+    )
+    count = cursor.fetchone()[0]
+
+    # Check if liked
+    cursor.execute(
+        "SELECT 1 FROM likes WHERE post_id = %s AND user_id = %s",
+        (post_id, user_id)
+    )
+    liked = cursor.fetchone() is not None
+
+    return {
+        "likes_count": count,
+        "liked": liked
     }

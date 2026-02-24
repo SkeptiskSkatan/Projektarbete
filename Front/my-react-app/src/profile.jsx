@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import "./main.css";
 
 export default function Profile({ userId, currentUserId }) {
   const [user, setUser] = useState(null)
@@ -125,39 +126,68 @@ export default function Profile({ userId, currentUserId }) {
       <h3>Posts ({posts.length})</h3>
 
       {posts.map((p) => (
-        <div
-          key={p.id}
-          onClick={() => openPost(p)}
-          style={{
-            border: "1px solid gray",
-            padding: "10px",
-            margin: "10px 0",
-            cursor: "pointer"
-          }}
-        >
-          {p.content}
+        <div key={p.id} className="post">
+          <div className="post-header">
+            <b 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                openUserProfile(p.user_id); 
+              }}
+              
+            >
+              {p.username}
+            </b>
+          </div>
+
+          <div onClick={() => openPost(p)} className="post-content">
+            {p.content}
+          </div>
+
+          <div className="post-like">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                // likePost(p.id); // Placeholder for your like function
+              }}
+            >
+              Like
+            </button>
+          </div>
         </div>
       ))}
 
+
+
       {/* Modal */}
       {selectedPost && (
-        <div style={overlayStyle} onClick={closeModal}>
-          <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-            <button onClick={closeModal} style={{ float: "right", cursor: "pointer" }}>X</button>
-            <h3>{selectedPost.content}</h3>
+        <div class="overlayStyle" onClick={closeModal}>
+          <div class="modalStyle" onClick={e => e.stopPropagation()}>
+            <button onClick={closeModal}>
+              X
+            </button>
+
+            <h3>{selectedPost.username}</h3>
+            <p>{selectedPost.content}</p>
+
             <hr />
+
             <h4>Comments</h4>
-            {comments.length === 0 && <p>No comments yet</p>}
-            {comments.map((c, i) => (
-              <p key={i}><b>{c.username}</b>: {c.content}</p>
-            ))}
-            <input
-              placeholder="Write a comment..."
-              value={commentInput}
-              onChange={(e) => setCommentInput(e.target.value)}
-              style={{ width: "100%", marginTop: "10px" }}
-            />
-            <button onClick={createComment} style={{ marginTop: "10px" }}>Comment</button>
+            <div>
+              {comments.map((c, i) => (
+                <p key={i}>
+                  <b>{c.username}</b>: {c.content}
+                </p>
+              ))}
+            </div>
+
+            <div style={{ marginTop: "15px" }}>
+              <input
+                placeholder="Comment"
+                value={commentInput}
+                onChange={e => setCommentInput(e.target.value)}
+              />
+              <button onClick={createComment}>Comment</button>
+            </div>
           </div>
         </div>
       )}
@@ -166,21 +196,3 @@ export default function Profile({ userId, currentUserId }) {
 }
 
 
-const overlayStyle = {
-  position: "fixed",
-  inset: 0,
-  backgroundColor: "rgba(0,0,0,0.6)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 9999
-}
-
-const modalStyle = {
-  backgroundColor: "white",
-  padding: "20px",
-  width: "450px",
-  borderRadius: "12px",
-  maxHeight: "80vh",
-  overflowY: "auto"
-}
