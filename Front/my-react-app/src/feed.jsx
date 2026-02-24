@@ -61,77 +61,154 @@ function Post({ p, userId, openUserProfile, openPost }) {
   );
 }
 
-export default function Feed({ userId }) {
-  // Local state: posts from the server + current input text
-  const [posts, setPosts] = useState([])
-  const [content, setContent] = useState("")
-  const [message, setMessage] = useState("")
+export default function Feed({ userId, logout, openUserProfile }) {
+  const [posts, setPosts] = useState([]);
+  const [content, setContent] = useState("");
+  const [skip, setSkip] = useState(0);
+  const limit = 10;
 
-  // Fetch all posts from the backend
-  async function fetchPosts() {
-    const res = await fetch("http://localhost:8000/posts")
-    const data = await res.json()
-    setPosts(data)
-  }
+  // ✅ Modal State
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [commentInput, setCommentInput] = useState("");
 
-  // Create a new post, then refresh the feed
-  async function createPost() {
-    if (!content.trim()) return
-    if (!userId) {
-      setMessage("You must be logged in to post")
-      return
+  useEffect(() => {
+    loadPosts(0);
+  }, []);
+
+  async function loadPosts(newSkip) {
+    const res = await fetch(
+      `http://localhost:8000/posts?limit=${limit}&skip=${newSkip}`
+    );
+    const data = await res.json();
+
+    if (newSkip === 0) {
+      setPosts(data);
+    } else {
+      setPosts(prev => [...prev, ...data]);
     }
 
-    const res = await fetch("http://localhost:8000/posts", {
+    setSkip(newSkip + limit);
+  }
+
+  async function createPost() {
+    if (!content.trim()) return;
+
+    await fetch("http://localhost:8000/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         content,
         user_id: userId
       })
-    })
+    });
 
-    if (!res.ok) {
-      setMessage("Could not create post")
-      return
-    }
-
-    setContent("")
-    setMessage("")
-    fetchPosts()
+    setContent("");
+    loadPosts(0);
   }
 
-  const handleKeyDown = (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault()
-      createPost()
-    }
+  // ✅ Modal Functions
+  async function fetchComments(postId) {
+    const res = await fetch(`http://localhost:8000/posts/${postId}/comments`);
+    const data = await res.json();
+    setComments(data);
   }
 
-  useEffect(() => {
-    fetchPosts()
-  }, [])
+  function openPost(post) {
+    setSelectedPost(post);
+    fetchComments(post.id);
+  }
 
+  function closeModal() {
+    setSelectedPost(null);
+    setComments([]);
+    setCommentInput("");
+  }
+
+  async function createComment() {
+    if (!commentInput.trim()) return;
+
+    await fetch("http://localhost:8000/comments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: commentInput,
+        user_id: userId,
+        post_id: selectedPost.id
+      })
+    });
+
+    setCommentInput("");
+    fetchComments(selectedPost.id);
+  }
 
   return (
     <div className="feed-container">
       <h2>Feed</h2>
-      <input
-        placeholder="KIM YONG UN I'M KIM YONG UN"
-        value={content}
-        onChange={e => setContent(e.target.value)}
-        onKeyDown={handleKeyDown}
-      />
 
-      <button onClick={createPost}>Post</button>
+      <div style={{ marginTop: "20px" }}>
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Det"
+          rows="3"
+          style={{ width: "100%" }}
+        />
+        <button onClick={createPost} style={{ marginTop: "10px" }}>
+          Post
+        </button>
+      </div>
 
-      {message && <p>{message}</p>}
+      <div style={{ marginTop: "30px" }}>
+        {posts.map(p => (
+          <Post
+            key={p.id}
+            p={p}
+            userId={userId}
+            openUserProfile={openUserProfile}
+            openPost={openPost}
+          />
+        ))}
+      </div>
 
-      {posts.map((p, i) => (
-        <p key={i}>
-          <b>{p.username}</b>: {p.content}
-        </p>
-      ))}
-    </>
-  )
+      <button
+        className="load-more-btn"
+        onClick={() => loadPosts(skip)}
+      >
+        Load More
+      </button>
+
+      {/*  Modal */}
+      {selectedPost && (
+        <div className="overlayStyle" onClick={closeModal}>
+          <div className="modalStyle" onClick={e => e.stopPropagation()}>
+            <button onClick={closeModal}>X</button>
+
+            <h3>{selectedPost.username}</h3>
+            <p>{selectedPost.content}</p>
+
+            <hr />
+
+            <h4>Comments</h4>
+            <div>
+              {comments.map((c, i) => (
+                <p key={i}>
+                  <b>{c.username}</b>: {c.content}
+                </p>
+              ))}
+            </div>
+
+            <div style={{ marginTop: "15px" }}>
+              <input
+                placeholder="Comment"
+                value={commentInput}
+                onChange={e => setCommentInput(e.target.value)}
+              />
+              <button onClick={createComment}>Comment</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
