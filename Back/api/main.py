@@ -370,3 +370,42 @@ def get_post_likes(post_id: int, user_id: int):
         "likes_count": count,
         "liked": liked
     }
+
+
+    
+
+
+# ===============================
+# GET FOLLOWERS
+# ===============================
+
+@app.get("/users/{user_id}/followers")
+def get_followers(user_id: int):
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT users.id, users.username
+        FROM followers
+        JOIN users ON followers.follower_id = users.id
+        WHERE followers.following_id = %s
+    """, (user_id,))
+    rows = cursor.fetchall()
+
+    return [{"id": r[0], "username": r[1]} for r in rows]
+
+
+# ===============================
+# GET FOLLOWING
+# ===============================
+
+@app.get("/users/{user_id}/following")
+def get_following(user_id: int):
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT users.id, users.username
+        FROM followers
+        JOIN users ON followers.following_id = users.id
+        WHERE followers.follower_id = %s
+    """, (user_id,))
+    rows = cursor.fetchall()
+
+    return [{"id": r[0], "username": r[1]} for r in rows]

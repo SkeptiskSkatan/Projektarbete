@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import "./main.css";
 
-export default function Profile({ userId, currentUserId }) {
+export default function Profile({ userId, currentUserId, openUserProfile }) {
   const [user, setUser] = useState(null)
   const [posts, setPosts] = useState([])
   const [selectedPost, setSelectedPost] = useState(null)
@@ -10,27 +10,27 @@ export default function Profile({ userId, currentUserId }) {
   const [isFollowing, setIsFollowing] = useState(false)
   const [stats, setStats] = useState({ followers_count: 0, following_count: 0 })
 
+  // ✅ NYTT
+  const [listModal, setListModal] = useState(null)
+  const [userList, setUserList] = useState([])
+
   useEffect(() => {
     if (!userId) return
 
-    // Fetch user info
     fetch(`http://localhost:8000/users/${userId}`)
       .then(res => res.json())
       .then(setUser)
       .catch(err => console.error(err))
 
-    // Fetch user's posts
     fetch(`http://localhost:8000/users/${userId}/posts`)
       .then(res => res.json())
       .then(setPosts)
       .catch(err => console.error(err))
 
-    // Fetch Follow Stats
     fetch(`http://localhost:8000/users/${userId}/follow_stats`)
       .then(res => res.json())
       .then(setStats)
 
-    // Check Follow Status
     if (currentUserId && userId !== currentUserId) {
       fetch(`http://localhost:8000/is_following/${currentUserId}/${userId}`)
         .then(res => res.json())
@@ -38,7 +38,6 @@ export default function Profile({ userId, currentUserId }) {
     }
   }, [userId, currentUserId])
 
-  // Follow Logic
   async function toggleFollow() {
     const endpoint = isFollowing ? "unfollow" : "follow"
     await fetch(`http://localhost:8000/${endpoint}`, {
@@ -51,12 +50,12 @@ export default function Profile({ userId, currentUserId }) {
     })
     
     setIsFollowing(!isFollowing)
+
     const res = await fetch(`http://localhost:8000/users/${userId}/follow_stats`)
     const newStats = await res.json()
     setStats(newStats)
   }
 
-  // Modal & Comment Logic
   async function fetchComments(postId) {
     const res = await fetch(`http://localhost:8000/posts/${postId}/comments`)
     const data = await res.json()
@@ -91,6 +90,21 @@ export default function Profile({ userId, currentUserId }) {
     fetchComments(selectedPost.id)
   }
 
+  // ✅ NYTT – open follower list
+  async function openList(type) {
+    const res = await fetch(
+      `http://localhost:8000/users/${userId}/${type}`
+    )
+    const data = await res.json()
+    setUserList(data)
+    setListModal(type)
+  }
+
+  function closeList() {
+    setListModal(null)
+    setUserList([])
+  }
+
   if (!user) return <p>Loading profile...</p>
 
   return (
@@ -101,11 +115,21 @@ export default function Profile({ userId, currentUserId }) {
 
       {/* Stats Display */}
       <div style={{ display: "flex", gap: "15px", marginBottom: "10px" }}>
-        <span><b>{stats.followers_count}</b> Followers</span>
-        <span><b>{stats.following_count}</b> Following</span>
+        <span 
+          style={{ cursor: "pointer" }}
+          onClick={() => openList("followers")}
+        >
+          <b>{stats.followers_count}</b> Followers
+        </span>
+
+        <span 
+          style={{ cursor: "pointer" }}
+          onClick={() => openList("following")}
+        >
+          <b>{stats.following_count}</b> Following
+        </span>
       </div>
 
-      {/* The follow button only shows when it is someone elses profile */}
       {currentUserId && userId !== currentUserId && (
         <button 
           onClick={toggleFollow}
@@ -133,7 +157,6 @@ export default function Profile({ userId, currentUserId }) {
                 e.stopPropagation(); 
                 openUserProfile(p.user_id); 
               }}
-              
             >
               {p.username}
             </b>
@@ -147,7 +170,6 @@ export default function Profile({ userId, currentUserId }) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                // likePost(p.id); // Placeholder for your like function
               }}
             >
               Like
@@ -156,15 +178,11 @@ export default function Profile({ userId, currentUserId }) {
         </div>
       ))}
 
-
-
-      {/* Modal */}
+      {/* Post Modal */}
       {selectedPost && (
-        <div class="overlayStyle" onClick={closeModal}>
-          <div class="modalStyle" onClick={e => e.stopPropagation()}>
-            <button onClick={closeModal}>
-              X
-            </button>
+        <div className="overlayStyle" onClick={closeModal}>
+          <div className="modalStyle" onClick={e => e.stopPropagation()}>
+            <button onClick={closeModal}>X</button>
 
             <h3>{selectedPost.username}</h3>
             <p>{selectedPost.content}</p>
@@ -191,6 +209,37 @@ export default function Profile({ userId, currentUserId }) {
           </div>
         </div>
       )}
+
+      {/* ✅ NYTT – Followers/Following Modal */}
+      {listModal && (
+        <div className="overlayStyle" onClick={closeList}>
+          <div className="modalStyle" onClick={e => e.stopPropagation()}>
+            <button onClick={closeList}>X</button>
+
+            <h3>
+              {listModal === "followers"
+                ? "Followers"
+                : "Following"}
+            </h3>
+
+            {userList.length === 0 && <p>No users found</p>}
+
+            {userList.map((u) => (
+              <p
+                key={u.id}
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  closeList()
+                  openUserProfile(u.id)
+                }}
+              >
+                {u.username}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
     </>
   )
 }
