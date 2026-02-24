@@ -21,6 +21,15 @@ function App() {
     setShowWelcome(true)
   }
 
+  function openUserProfile(id) {
+  if (id === userId) {
+    setView("profile")
+  } else {
+    setSelectedUserId(id)
+    setView("userProfile")
+  }
+}
+
   // ======================
   // NOT LOGGED IN
   // ======================
@@ -74,43 +83,22 @@ function App() {
     )
   }
 
-  // ======================
-  // LOGGED IN
-  // ======================
+    // LOGGED IN
   return (
     <>
       <nav style={{ marginBottom: "1rem" }}>
-        <button
-          onClick={() => {
-            setView("feed")
-            setSelectedUserId(null)
-          }}
-        >
-          Feed
-        </button>
-
-        <button
-          onClick={() => {
-            setView("profile")
-            setSelectedUserId(null)
-          }}
-        >
-          My Profile
-        </button>
-
+        <button onClick={() => setView("feed")}>Feed</button>
+        <button onClick={() => setView("profile")}>Profile</button>
         <button onClick={logout}>Logout</button>
       </nav>
 
-      {selectedUserId ? (
-        <Profile
-          userId={selectedUserId}
-          goBack={() => setSelectedUserId(null)}
-        />
-      ) : view === "feed" ? (
-        <Feed userId={userId} viewProfile={setSelectedUserId} />
-      ) : (
-        <Profile userId={userId} />
+      {view === "feed" && (
+        <Feed userId={userId} openUserProfile={openUserProfile} />
       )}
+      {view === "profile" && <Profile userId={userId} />}
+      {view === "userProfile" && selectedUserId && (<Profile userId={selectedUserId} currentUserId={userId} />
+
+)}
     </>
   )
 }

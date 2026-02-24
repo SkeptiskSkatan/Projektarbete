@@ -1,9 +1,11 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from database import conn 
 import bcrypt
 import psycopg2
 from fastapi.middleware.cors import CORSMiddleware
+
+
 
 app = FastAPI()
 
@@ -17,9 +19,7 @@ app.add_middleware(
 
 cursor = conn.cursor()
 
-# -------------------
-# MODELS
-# -------------------
+
 class UserRegister(BaseModel):
     username: str
     email: str
@@ -33,18 +33,20 @@ class Post(BaseModel):
     content: str
     user_id: int
 
-class LikePost(BaseModel):
-    user_id: int
-    post_id: int
-
 class CommentCreate(BaseModel):
     content: str
     user_id: int
     post_id: int
 
-# -------------------
-# HELPERS
-# -------------------
+class FollowRequest(BaseModel):
+    follower_id: int
+    following_id: int
+
+class LikeRequest(BaseModel):
+    user_id: int
+    post_id: int
+
+# Det ändrar detta 
 def get_connection():
     return psycopg2.connect(
         host="localhost",
@@ -75,28 +77,44 @@ def user_or_email_exists(username, email):
     )
     return cursor.fetchone() is not None
 
-# -------------------
-# AUTH
-# -------------------
+
+
+
 @app.post("/register")
 def register(user: UserRegister):
     if not user.username or not user.email or not user.password:
-        raise HTTPException(status_code=400, detail="Username, email and password are required")
+        raise HTTPException(
+            status_code=400,
+            detail="Username, email and password are required"
+        )
 
     if password_too_weak(user.password):
-        raise HTTPException(status_code=400, detail="Password is too weak")
+        raise HTTPException(
+            status_code=400,
+            detail="Password is too weak"
+        )
 
     if user_or_email_exists(user.username, user.email):
-        raise HTTPException(status_code=409, detail="Username or email already exists")
+        raise HTTPException(
+            status_code=409,
+            detail="Username or email already exists"
+        )
 
     password_hash = hash_password(user.password)
 
     cursor.execute(
-        "INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s)",
+        """
+        INSERT INTO users (username, email, password_hash)
+        VALUES (%s, %s, %s)
+        """,
         (user.username, user.email, password_hash)
     )
     conn.commit()
+
     return {"message": "User created"}
+
+
+
 
 @app.post("/login")
 def login(user: UserLogin):
@@ -116,9 +134,9 @@ def login(user: UserLogin):
 
     return {"user_id": user_id}
 
-# -------------------
-# POSTS
-# -------------------
+
+
+
 @app.post("/posts")
 def create_post(post: Post):
     cursor.execute(
@@ -128,94 +146,50 @@ def create_post(post: Post):
     conn.commit()
     return {"message": "Post created"}
 
+
 @app.get("/posts")
-def get_posts(user_id: int):
-    """
-    Hämtar alla poster med antal likes och om den aktuella user_id har likeat.
-    """
-    conn = get_connection()
+def get_posts(limit: int = 10, skip: int = 0):
     cursor = conn.cursor()
-    try:
-        cursor.execute("""
-            SELECT 
-                posts.id,
-                posts.content,
-                posts.user_id,
-                users.username,
-                COALESCE(lc.likes_count, 0) AS likes,
-                CASE WHEN l.user_id IS NULL THEN FALSE ELSE TRUE END AS liked_by_user
-            FROM posts
-            JOIN users ON posts.user_id = users.id
-            LEFT JOIN (
-                SELECT post_id, COUNT(*) AS likes_count
-                FROM likes
-                GROUP BY post_id
-            ) lc ON posts.id = lc.post_id
-            LEFT JOIN likes l ON posts.id = l.post_id AND l.user_id = %s
-            ORDER BY posts.created_at DESC
-        """, (user_id,))
-        rows = cursor.fetchall()
-    finally:
-        cursor.close()
-        conn.close()
+    cursor.execute("""
+        SELECT posts.id, posts.content, users.username, posts.user_id
+        FROM posts
+        JOIN users ON posts.user_id = users.id
+        ORDER BY posts.created_at DESC
+        LIMIT %s OFFSET %s
+    """, (limit, skip))
+    rows = cursor.fetchall()
+    return [{
 
-    return [
-        {
-            "id": row[0],
-            "content": row[1],
-            "user_id": row[2],
-            "username": row[3],
-            "likes": row[4],
-            "liked_by_user": row[5]
-        }
-        for row in rows
-    ]
+            "id": r[0], 
+            "content": r[1], 
+            "username": r[2], 
+            "user_id": r[3]}
 
-# -------------------
-# LIKE / UNLIKE
-# -------------------
-@app.post("/like")
-def toggle_like(like: LikePost):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        # Kolla om användaren redan likeat
-        cursor.execute("SELECT 1 FROM likes WHERE user_id = %s AND post_id = %s", (like.user_id, like.post_id))
-        if cursor.fetchone():
-            # Ta bort like (unlike)
-            cursor.execute("DELETE FROM likes WHERE user_id = %s AND post_id = %s", (like.user_id, like.post_id))
-        else:
-            # Lägg till like
-            cursor.execute("INSERT INTO likes (user_id, post_id) VALUES (%s, %s)", (like.user_id, like.post_id))
-        conn.commit()
-    finally:
-        cursor.close()
-        conn.close()
+            for r in rows
+        ]
 
-    return {"message": "Toggled like"}
 
-# -------------------
-# USER PROFILE
-# -------------------
 @app.get("/users/{user_id}")
 def get_user_profile(user_id: int):
-    conn = get_connection()
-    cursor = conn.cursor()
+    conn = get_connection() ###
+    cursor = conn.cursor() ###
 
     cursor.execute("""
         SELECT id, username, email, created_at
         FROM users
         WHERE id = %s
     """, (user_id,))
+
     row = cursor.fetchone()
 
-    cursor.close()
-    conn.close()
+    cursor.close() ###
+    conn.close() ###
 
     if row is None:
         raise HTTPException(status_code=404, detail="User not found")
 
     id, username, email, created_at = row
+
     return {
         "id": id,
         "username": username,
@@ -223,62 +197,176 @@ def get_user_profile(user_id: int):
         "created_at": created_at
     }
 
+
+
 @app.get("/users/{user_id}/posts")
-def get_user_posts(user_id: int):
+def get_user_posts(user_id: int, limit: int = 10, skip: int = 0):
+    conn = get_connection()
+    cursor = conn.cursor()
     cursor.execute("""
-        SELECT content, created_at
+        SELECT posts.id, posts.content, users.username, posts.user_id
         FROM posts
-        WHERE user_id = %s
-        ORDER BY created_at DESC
-    """, (user_id,))
+        JOIN users ON posts.user_id = users.id
+        WHERE posts.user_id = %s
+        ORDER BY posts.created_at DESC
+        LIMIT %s OFFSET %s
+    """, (user_id, limit, skip))
     rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return [
+        {
+            "id": r[0], 
+            "content": r[1], 
+            "username": r[2], 
+            "user_id": r[3]
+        } 
+            
+        for r in rows
+    ]
 
-    return [{"content": row[0], "created_at": row[1]} for row in rows]
-
-
-
-# -------------------
-# COMMENTS
-# -------------------
 
 @app.post("/comments")
 def create_comment(comment: CommentCreate):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "INSERT INTO comments (content, user_id, post_id) VALUES (%s, %s, %s)",
-            (comment.content, comment.user_id, comment.post_id)
-        )
-        conn.commit()
-    finally:
-        cursor.close()
-        conn.close()
+
+    if not comment.content:
+        raise HTTPException(status_code=400, detail="Content is required")
+
+    # Optional: check if user exists
+    cursor.execute("SELECT 1 FROM users WHERE id = %s", (comment.user_id,))
+    if not cursor.fetchone():
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Optional: check if post exists
+    cursor.execute("SELECT 1 FROM posts WHERE id = %s", (comment.post_id,))
+    if not cursor.fetchone():
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    cursor.execute(
+        """
+        INSERT INTO comments (content, user_id, post_id)
+        VALUES (%s, %s, %s)
+        """,
+        (comment.content, comment.user_id, comment.post_id)
+    )
+    conn.commit()
 
     return {"message": "Comment created"}
 
-
 @app.get("/posts/{post_id}/comments")
 def get_comments(post_id: int):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("""
-            SELECT comments.content, users.username
-            FROM comments
-            JOIN users ON comments.user_id = users.id
-            WHERE comments.post_id = %s
-            ORDER BY comments.created_at ASC
-        """, (post_id,))
-        rows = cursor.fetchall()
-    finally:
-        cursor.close()
-        conn.close()
+
+    cursor.execute(
+        """
+        SELECT comments.content,
+               comments.created_at,
+               users.username
+        FROM comments
+        JOIN users ON comments.user_id = users.id
+        WHERE comments.post_id = %s
+        ORDER BY comments.created_at DESC
+        """,
+        (post_id,)
+    )
+
+    rows = cursor.fetchall()
 
     return [
         {
             "content": row[0],
-            "username": row[1]
+            "created_at": row[1],
+            "username": row[2]
         }
         for row in rows
     ]
+
+@app.post("/follow")
+def follow_user(req: FollowRequest):
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        INSERT INTO followers (follower_id, following_id) 
+        VALUES (%s, %s) ON CONFLICT DO NOTHING
+    """, (req.follower_id, req.following_id))
+    conn.commit()
+    return {"message": "Followed"}
+
+@app.post("/unfollow")
+def unfollow_user(req: FollowRequest):
+    cursor = conn.cursor()
+    cursor.execute("""
+        DELETE FROM followers 
+        WHERE follower_id = %s AND following_id = %s
+    """, (req.follower_id, req.following_id))
+    conn.commit()
+    return {"message": "Unfollowed"}
+
+@app.get("/is_following/{follower_id}/{following_id}")
+def is_following(follower_id: int, following_id: int):
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 1 FROM followers 
+        WHERE follower_id = %s AND following_id = %s
+    """, (follower_id, following_id))
+    return {"is_following": cursor.fetchone() is not None}
+
+
+@app.get("/users/{user_id}/follow_stats")
+def get_follow_stats(user_id: int):
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(*) FROM followers WHERE following_id = %s", (user_id,))
+    followers_count = cursor.fetchone()[0]
+    
+    
+    cursor.execute("SELECT COUNT(*) FROM followers WHERE follower_id = %s", (user_id,))
+    following_count = cursor.fetchone()[0]
+    
+    return {
+        "followers_count": followers_count,
+        "following_count": following_count
+    }
+
+@app.post("/like")
+def like_post(req: LikeRequest):
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO likes (user_id, post_id)
+        VALUES (%s, %s)
+        ON CONFLICT DO NOTHING
+    """, (req.user_id, req.post_id))
+    conn.commit()
+    return {"message": "Liked"}
+
+@app.post("/unlike")
+def unlike_post(req: LikeRequest):
+    cursor = conn.cursor()
+    cursor.execute("""
+        DELETE FROM likes
+        WHERE user_id = %s AND post_id = %s
+    """, (req.user_id, req.post_id))
+    conn.commit()
+    return {"message": "Unliked"}
+
+@app.get("/posts/{post_id}/likes/{user_id}")
+def get_post_likes(post_id: int, user_id: int):
+    cursor = conn.cursor()
+
+    # Count likes
+    cursor.execute(
+        "SELECT COUNT(*) FROM likes WHERE post_id = %s",
+        (post_id,)
+    )
+    count = cursor.fetchone()[0]
+
+    # Check if liked
+    cursor.execute(
+        "SELECT 1 FROM likes WHERE post_id = %s AND user_id = %s",
+        (post_id, user_id)
+    )
+    liked = cursor.fetchone() is not None
+
+    return {
+        "likes_count": count,
+        "liked": liked
+    }
