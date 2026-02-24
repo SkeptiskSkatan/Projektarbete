@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./main.css";
 
-function Post({ p, userId, openUserProfile }) {
+function Post({ p, userId, openUserProfile, openPost }) {
   const [likes, setLikes] = useState(0);
   const [liked, setLiked] = useState(false);
 
@@ -13,14 +13,6 @@ function Post({ p, userId, openUserProfile }) {
         setLiked(data.liked);
       });
   }, [p.id, userId]);
-
-
-
-  //man kan göra så att man 
-  function openPost(post) {
-    setSelectedPost(post)
-    fetchComments(post.id)
-  }
 
   async function toggleLike(e) {
     e.stopPropagation();
@@ -75,6 +67,11 @@ export default function Feed({ userId, logout, openUserProfile }) {
   const [skip, setSkip] = useState(0);
   const limit = 10;
 
+  // ✅ Modal State
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [commentInput, setCommentInput] = useState("");
+
   useEffect(() => {
     loadPosts(0);
   }, []);
@@ -107,7 +104,42 @@ export default function Feed({ userId, logout, openUserProfile }) {
     });
 
     setContent("");
-    loadPosts(0); // reload feed
+    loadPosts(0);
+  }
+
+  // ✅ Modal Functions
+  async function fetchComments(postId) {
+    const res = await fetch(`http://localhost:8000/posts/${postId}/comments`);
+    const data = await res.json();
+    setComments(data);
+  }
+
+  function openPost(post) {
+    setSelectedPost(post);
+    fetchComments(post.id);
+  }
+
+  function closeModal() {
+    setSelectedPost(null);
+    setComments([]);
+    setCommentInput("");
+  }
+
+  async function createComment() {
+    if (!commentInput.trim()) return;
+
+    await fetch("http://localhost:8000/comments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: commentInput,
+        user_id: userId,
+        post_id: selectedPost.id
+      })
+    });
+
+    setCommentInput("");
+    fetchComments(selectedPost.id);
   }
 
   return (
@@ -134,6 +166,7 @@ export default function Feed({ userId, logout, openUserProfile }) {
             p={p}
             userId={userId}
             openUserProfile={openUserProfile}
+            openPost={openPost}
           />
         ))}
       </div>
@@ -144,6 +177,38 @@ export default function Feed({ userId, logout, openUserProfile }) {
       >
         Load More
       </button>
+
+      {/*  Modal */}
+      {selectedPost && (
+        <div className="overlayStyle" onClick={closeModal}>
+          <div className="modalStyle" onClick={e => e.stopPropagation()}>
+            <button onClick={closeModal}>X</button>
+
+            <h3>{selectedPost.username}</h3>
+            <p>{selectedPost.content}</p>
+
+            <hr />
+
+            <h4>Comments</h4>
+            <div>
+              {comments.map((c, i) => (
+                <p key={i}>
+                  <b>{c.username}</b>: {c.content}
+                </p>
+              ))}
+            </div>
+
+            <div style={{ marginTop: "15px" }}>
+              <input
+                placeholder="Comment"
+                value={commentInput}
+                onChange={e => setCommentInput(e.target.value)}
+              />
+              <button onClick={createComment}>Comment</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
