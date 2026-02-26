@@ -220,20 +220,21 @@ async function deletePost() {
         >
           Following Feed
         </button>
-      </div>
-
+      </div> 
+      
+    {feedType === "all" && (
       <div>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Skriv något..."
           rows="3"
-          style={{ width: "100%" }}
         />
         <button onClick={createPost} style={{ marginTop: "10px" }}>
           Post
         </button>
       </div>
+    )}  
 
       <div style={{ marginTop: "30px" }}>
         {posts.map((p, index) => {
