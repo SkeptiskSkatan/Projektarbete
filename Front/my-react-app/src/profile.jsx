@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
+import PostList from "./postList";
 import "./main.css";
 
 export default function Profile({ userId, currentUserId, openUserProfile }) {
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [likes, setLikes] = useState({}); // { [postId]: { likes_count, liked } }
+  const [likes, setLikes] = useState({});
   const [selectedPost, setSelectedPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState("");
   const [isFollowing, setIsFollowing] = useState(false);
-  const [stats, setStats] = useState({ followers_count: 0, following_count: 0 });
+  const [stats, setStats] = useState({
+    followers_count: 0,
+    following_count: 0,
+  });
 
   const [listModal, setListModal] = useState(null);
   const [userList, setUserList] = useState([]);
@@ -18,42 +22,51 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
     if (!userId) return;
 
     fetch(`http://localhost:8000/users/${userId}`)
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(setUser)
-      .catch(err => console.error(err));
+      .catch((err) => console.error(err));
 
     fetch(`http://localhost:8000/users/${userId}/posts`)
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setPosts(data);
-        data.forEach(p => fetchLikes(p.id)); // hämta likes för varje post
+        data.forEach((p) => fetchLikes(p.id));
       })
-      .catch(err => console.error(err));
+      .catch((err) => console.error(err));
 
     fetch(`http://localhost:8000/users/${userId}/follow_stats`)
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(setStats);
 
     if (currentUserId && userId !== currentUserId) {
-      fetch(`http://localhost:8000/is_following/${currentUserId}/${userId}`)
-        .then(res => res.json())
-        .then(data => setIsFollowing(data.is_following));
+      fetch(
+        `http://localhost:8000/is_following/${currentUserId}/${userId}`
+      )
+        .then((res) => res.json())
+        .then((data) => setIsFollowing(data.is_following));
     }
   }, [userId, currentUserId]);
 
   // =========================
-  // Follow/unfollow
+  // Follow / Unfollow
   // =========================
   async function toggleFollow() {
     const endpoint = isFollowing ? "unfollow" : "follow";
+
     await fetch(`http://localhost:8000/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ follower_id: currentUserId, following_id: userId }),
+      body: JSON.stringify({
+        follower_id: currentUserId,
+        following_id: userId,
+      }),
     });
+
     setIsFollowing(!isFollowing);
 
-    const res = await fetch(`http://localhost:8000/users/${userId}/follow_stats`);
+    const res = await fetch(
+      `http://localhost:8000/users/${userId}/follow_stats`
+    );
     const newStats = await res.json();
     setStats(newStats);
   }
@@ -62,9 +75,11 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
   // Likes
   // =========================
   async function fetchLikes(postId) {
-    const res = await fetch(`http://localhost:8000/posts/${postId}/likes/${currentUserId}`);
+    const res = await fetch(
+      `http://localhost:8000/posts/${postId}/likes/${currentUserId}`
+    );
     const data = await res.json();
-    setLikes(prev => ({ ...prev, [postId]: data }));
+    setLikes((prev) => ({ ...prev, [postId]: data }));
   }
 
   async function toggleLike(postId) {
@@ -74,17 +89,22 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
     await fetch(`http://localhost:8000/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: currentUserId, post_id: postId }),
+      body: JSON.stringify({
+        user_id: currentUserId,
+        post_id: postId,
+      }),
     });
 
-    fetchLikes(postId); // uppdatera likes state
+    fetchLikes(postId);
   }
 
   // =========================
   // Comments
   // =========================
   async function fetchComments(postId) {
-    const res = await fetch(`http://localhost:8000/posts/${postId}/comments`);
+    const res = await fetch(
+      `http://localhost:8000/posts/${postId}/comments`
+    );
     const data = await res.json();
     setComments(data);
   }
@@ -122,20 +142,26 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
   // =========================
   async function deletePost() {
     if (!selectedPost) return;
-    const confirmDelete = window.confirm("Are you sure you want to delete this post?");
+
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this post?"
+    );
     if (!confirmDelete) return;
 
-    const res = await fetch(`http://localhost:8000/posts/${selectedPost.id}/${currentUserId}`, {
-      method: "DELETE",
-    });
+    const res = await fetch(
+      `http://localhost:8000/posts/${selectedPost.id}/${currentUserId}`,
+      { method: "DELETE" }
+    );
 
     if (!res.ok) {
       alert("Could not delete post. Make sure you are the owner.");
       return;
     }
 
-    // Ta bort från frontend
-    setPosts(prev => prev.filter(p => p.id !== selectedPost.id));
+    setPosts((prev) =>
+      prev.filter((p) => p.id !== selectedPost.id)
+    );
+
     closeModal();
   }
 
@@ -143,7 +169,9 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
   // Followers / Following
   // =========================
   async function openList(type) {
-    const res = await fetch(`http://localhost:8000/users/${userId}/${type}`);
+    const res = await fetch(
+      `http://localhost:8000/users/${userId}/${type}`
+    );
     const data = await res.json();
     setUserList(data);
     setListModal(type);
@@ -159,85 +187,86 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
   return (
     <>
       <h2>Profile</h2>
-      <p><b>Username:</b> {user.username}</p>
-      <p><b>Joined:</b> {new Date(user.created_at).toLocaleDateString()}</p>
 
-      <div style={{ display: "flex", gap: "15px", marginBottom: "10px" }}>
-        <span style={{ cursor: "pointer" }} onClick={() => openList("followers")}>
+      <p>
+        <b>Username:</b> {user.username}
+      </p>
+
+      <p>
+        <b>Joined:</b>{" "}
+        {new Date(user.created_at).toLocaleDateString()}
+      </p>
+
+      {/* Stats */}
+      <div
+        style={{
+          display: "flex",
+          gap: "15px",
+          marginBottom: "10px",
+        }}
+      >
+        <span
+          style={{ cursor: "pointer" }}
+          onClick={() => openList("followers")}
+        >
           <b>{stats.followers_count}</b> Followers
         </span>
-        <span style={{ cursor: "pointer" }} onClick={() => openList("following")}>
+
+        <span
+          style={{ cursor: "pointer" }}
+          onClick={() => openList("following")}
+        >
           <b>{stats.following_count}</b> Following
         </span>
       </div>
 
-      {currentUserId && userId !== currentUserId && (
-        <button
-          onClick={toggleFollow}
-          style={{
-            backgroundColor: isFollowing ? "#ccc" : "#007bff",
-            color: "white",
-            border: "none",
-            padding: "5px 15px",
-            borderRadius: "5px",
-            cursor: "pointer",
-            marginBottom: "15px",
-          }}
-        >
-          {isFollowing ? "Unfollow" : "Follow"}
-        </button>
-      )}
+      {/* Follow Button */}
+      {currentUserId &&
+        userId !== currentUserId && (
+          <button
+            onClick={toggleFollow}
+            style={{
+              backgroundColor: isFollowing
+                ? "#ccc"
+                : "#007bff",
+              color: "white",
+              border: "none",
+              padding: "5px 15px",
+              borderRadius: "5px",
+              cursor: "pointer",
+              marginBottom: "15px",
+            }}
+          >
+            {isFollowing ? "Unfollow" : "Follow"}
+          </button>
+        )}
 
-      <h3>Posts ({posts.length})</h3>
-
-      {posts.map(p => (
-        <div key={p.id} className="post">
-          <div className="post-header">
-            <b
-              onClick={e => {
-                e.stopPropagation();
-                openUserProfile(p.user_id);
-              }}
-            >
-              {p.username}
-            </b>
-          </div>
-
-          <div onClick={() => openPost(p)} className="post-content">
-            {p.content}
-          </div>
-
-          {/* Like-knapp med hjärta och färg */}
-          <div className="post-like">
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                toggleLike(p.id);
-              }}
-              style={{
-                backgroundColor: "transparent",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "1rem",
-              }}
-            >
-              {likes[p.id]?.liked ? "❤️" : "🤍"} {likes[p.id]?.likes_count || 0}
-            </button>
-          </div>
-        </div>
-      ))}
+      {/* Posts */}
+      <PostList
+        posts={posts}
+        likes={likes}
+        onOpenPost={openPost}
+        onOpenUser={openUserProfile}
+        onToggleLike={toggleLike}
+      />
 
       {/* Post Modal */}
       {selectedPost && (
-        <div className="overlayStyle" onClick={closeModal}>
-          <div className="modalStyle" onClick={e => e.stopPropagation()}>
+        <div
+          className="overlayStyle"
+          onClick={closeModal}
+        >
+          <div
+            className="modalStyle"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button onClick={closeModal}>X</button>
 
             <h3>{selectedPost.username}</h3>
             <p>{selectedPost.content}</p>
 
-            {/* 🔴 DELETE BUTTON */}
-            {selectedPost.user_id === currentUserId && (
+            {selectedPost.user_id ===
+              currentUserId && (
               <button
                 onClick={deletePost}
                 style={{
@@ -257,40 +286,56 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
             <hr />
 
             <h4>Comments</h4>
-            <div>
-              {comments.map((c, i) => (
-                <p key={i}>
-                  <b>{c.username}</b>: {c.content}
-                </p>
-              ))}
-            </div>
+
+            {comments.map((c, i) => (
+              <p key={i}>
+                <b>{c.username}</b>: {c.content}
+              </p>
+            ))}
 
             <div style={{ marginTop: "15px" }}>
               <input
                 placeholder="Comment"
                 value={commentInput}
-                onChange={e => setCommentInput(e.target.value)}
+                onChange={(e) =>
+                  setCommentInput(e.target.value)
+                }
               />
-              <button onClick={createComment}>Comment</button>
+              <button onClick={createComment}>
+                Comment
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Followers/Following Modal */}
+      {/* Followers / Following Modal */}
       {listModal && (
-        <div className="overlayStyle" onClick={closeList}>
-          <div className="modalStyle" onClick={e => e.stopPropagation()}>
+        <div
+          className="overlayStyle"
+          onClick={closeList}
+        >
+          <div
+            className="modalStyle"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button onClick={closeList}>X</button>
-            <h3>{listModal === "followers" ? "Followers" : "Following"}</h3>
 
-            {userList.length === 0 && <p>No users found</p>}
+            <h3>
+              {listModal === "followers"
+                ? "Followers"
+                : "Following"}
+            </h3>
 
-            {userList.map(u => (
+            {userList.length === 0 && (
+              <p>No users found</p>
+            )}
+
+            {userList.map((u) => (
               <p
                 key={u.id}
                 style={{ cursor: "pointer" }}
-                onClick={e => {
+                onClick={(e) => {
                   e.stopPropagation();
                   closeList();
                   openUserProfile(u.id);
