@@ -4,12 +4,15 @@ import "./main.css";
 export default function Profile({ userId, currentUserId, openUserProfile }) {
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [likes, setLikes] = useState({}); // { [postId]: { likes_count, liked } }
+  const [likes, setLikes] = useState({});
   const [selectedPost, setSelectedPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState("");
   const [isFollowing, setIsFollowing] = useState(false);
-  const [stats, setStats] = useState({ followers_count: 0, following_count: 0 });
+  const [stats, setStats] = useState({
+    followers_count: 0,
+    following_count: 0,
+  });
 
   const [listModal, setListModal] = useState(null);
   const [userList, setUserList] = useState([]);
@@ -18,53 +21,56 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
     if (!userId) return;
 
     fetch(`http://localhost:8000/users/${userId}`)
-      .then(res => res.json())
-      .then(setUser)
-      .catch(err => console.error(err));
+      .then((res) => res.json())
+      .then(setUser);
 
     fetch(`http://localhost:8000/users/${userId}/posts`)
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setPosts(data);
-        data.forEach(p => fetchLikes(p.id)); // hämta likes för varje post
-      })
-      .catch(err => console.error(err));
+        data.forEach((p) => fetchLikes(p.id));
+      });
 
     fetch(`http://localhost:8000/users/${userId}/follow_stats`)
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(setStats);
 
     if (currentUserId && userId !== currentUserId) {
-      fetch(`http://localhost:8000/is_following/${currentUserId}/${userId}`)
-        .then(res => res.json())
-        .then(data => setIsFollowing(data.is_following));
+      fetch(
+        `http://localhost:8000/is_following/${currentUserId}/${userId}`
+      )
+        .then((res) => res.json())
+        .then((data) => setIsFollowing(data.is_following));
     }
   }, [userId, currentUserId]);
 
-  // =========================
-  // Follow/unfollow
-  // =========================
   async function toggleFollow() {
     const endpoint = isFollowing ? "unfollow" : "follow";
+
     await fetch(`http://localhost:8000/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ follower_id: currentUserId, following_id: userId }),
+      body: JSON.stringify({
+        follower_id: currentUserId,
+        following_id: userId,
+      }),
     });
+
     setIsFollowing(!isFollowing);
 
-    const res = await fetch(`http://localhost:8000/users/${userId}/follow_stats`);
+    const res = await fetch(
+      `http://localhost:8000/users/${userId}/follow_stats`
+    );
     const newStats = await res.json();
     setStats(newStats);
   }
 
-  // =========================
-  // Likes
-  // =========================
   async function fetchLikes(postId) {
-    const res = await fetch(`http://localhost:8000/posts/${postId}/likes/${currentUserId}`);
+    const res = await fetch(
+      `http://localhost:8000/posts/${postId}/likes/${currentUserId}`
+    );
     const data = await res.json();
-    setLikes(prev => ({ ...prev, [postId]: data }));
+    setLikes((prev) => ({ ...prev, [postId]: data }));
   }
 
   async function toggleLike(postId) {
@@ -74,17 +80,19 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
     await fetch(`http://localhost:8000/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: currentUserId, post_id: postId }),
+      body: JSON.stringify({
+        user_id: currentUserId,
+        post_id: postId,
+      }),
     });
 
-    fetchLikes(postId); // uppdatera likes state
+    fetchLikes(postId);
   }
 
-  // =========================
-  // Comments
-  // =========================
   async function fetchComments(postId) {
-    const res = await fetch(`http://localhost:8000/posts/${postId}/comments`);
+    const res = await fetch(
+      `http://localhost:8000/posts/${postId}/comments`
+    );
     const data = await res.json();
     setComments(data);
   }
@@ -117,33 +125,35 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
     fetchComments(selectedPost.id);
   }
 
-  // =========================
-  // Delete Post
-  // =========================
   async function deletePost() {
     if (!selectedPost) return;
-    const confirmDelete = window.confirm("Are you sure you want to delete this post?");
+
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this post?"
+    );
     if (!confirmDelete) return;
 
-    const res = await fetch(`http://localhost:8000/posts/${selectedPost.id}/${currentUserId}`, {
-      method: "DELETE",
-    });
+    const res = await fetch(
+      `http://localhost:8000/posts/${selectedPost.id}/${currentUserId}`,
+      { method: "DELETE" }
+    );
 
     if (!res.ok) {
-      alert("Could not delete post. Make sure you are the owner.");
+      alert("Could not delete post.");
       return;
     }
 
-    // Ta bort från frontend
-    setPosts(prev => prev.filter(p => p.id !== selectedPost.id));
+    setPosts((prev) =>
+      prev.filter((p) => p.id !== selectedPost.id)
+    );
+
     closeModal();
   }
 
-  // =========================
-  // Followers / Following
-  // =========================
   async function openList(type) {
-    const res = await fetch(`http://localhost:8000/users/${userId}/${type}`);
+    const res = await fetch(
+      `http://localhost:8000/users/${userId}/${type}`
+    );
     const data = await res.json();
     setUserList(data);
     setListModal(type);
@@ -159,6 +169,7 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
   return (
     <>
       <h2>Profile</h2>
+
       <p><b>Username:</b> {user.username}</p>
       <p><b>Joined:</b> {new Date(user.created_at).toLocaleDateString()}</p>
 
@@ -166,77 +177,77 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
         <span style={{ cursor: "pointer" }} onClick={() => openList("followers")}>
           <b>{stats.followers_count}</b> Followers
         </span>
+
         <span style={{ cursor: "pointer" }} onClick={() => openList("following")}>
           <b>{stats.following_count}</b> Following
         </span>
       </div>
 
-      {currentUserId && userId !== currentUserId && (
-        <button
-          onClick={toggleFollow}
-          style={{
-            backgroundColor: isFollowing ? "#ccc" : "#007bff",
-            color: "white",
-            border: "none",
-            padding: "5px 15px",
-            borderRadius: "5px",
-            cursor: "pointer",
-            marginBottom: "15px",
-          }}
-        >
-          {isFollowing ? "Unfollow" : "Follow"}
-        </button>
-      )}
+      {posts.map((p) => {
+        const liked = likes[p.id]?.liked;
+        const likesCount = likes[p.id]?.likes_count || 0;
 
-      <h3>Posts ({posts.length})</h3>
+        const formattedDate =
+          new Date(p.created_at).toLocaleDateString("sv-SE") +
+          " kl. " +
+          new Date(p.created_at).toLocaleTimeString("sv-SE", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
 
-      {posts.map(p => (
-        <div key={p.id} className="post">
-          <div className="post-header">
-            <b
-              onClick={e => {
-                e.stopPropagation();
-                openUserProfile(p.user_id);
-              }}
-            >
-              {p.username}
-            </b>
+        return (
+          <div key={p.id} className="post">
+
+            <div className="post-header">
+              <span
+                className="username-link"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openUserProfile(p.user_id);
+                }}
+              >
+                {p.username}
+              </span>
+
+              <div className="post-date">
+                {formattedDate}
+              </div>
+            </div>
+
+            <div onClick={() => openPost(p)} className="post-content">
+              {p.content}
+            </div>
+
+            <div style={{ marginTop: "8px", fontSize: "16px" }}>
+              {liked ? "❤️" : "🤍"} {likesCount}
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+              <button onClick={() => toggleLike(p.id)}>
+                {liked ? "Dislike" : "Like"}
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openPost(p);
+                }}
+              >
+                Comment
+              </button>
+            </div>
           </div>
+        );
+      })}
 
-          <div onClick={() => openPost(p)} className="post-content">
-            {p.content}
-          </div>
-
-          {/* Like-knapp med hjärta och färg */}
-          <div className="post-like">
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                toggleLike(p.id);
-              }}
-              style={{
-                backgroundColor: "transparent",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "1rem",
-              }}
-            >
-              {likes[p.id]?.liked ? "❤️" : "🤍"} {likes[p.id]?.likes_count || 0}
-            </button>
-          </div>
-        </div>
-      ))}
-
-      {/* Post Modal */}
       {selectedPost && (
         <div className="overlayStyle" onClick={closeModal}>
-          <div className="modalStyle" onClick={e => e.stopPropagation()}>
+          <div className="modalStyle" onClick={(e) => e.stopPropagation()}>
             <button onClick={closeModal}>X</button>
 
             <h3>{selectedPost.username}</h3>
             <p>{selectedPost.content}</p>
 
-            {/* 🔴 DELETE BUTTON */}
             {selectedPost.user_id === currentUserId && (
               <button
                 onClick={deletePost}
@@ -257,19 +268,18 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
             <hr />
 
             <h4>Comments</h4>
-            <div>
-              {comments.map((c, i) => (
-                <p key={i}>
-                  <b>{c.username}</b>: {c.content}
-                </p>
-              ))}
-            </div>
+
+            {comments.map((c, i) => (
+              <p key={i}>
+                <b>{c.username}</b>: {c.content}
+              </p>
+            ))}
 
             <div style={{ marginTop: "15px" }}>
               <input
                 placeholder="Comment"
                 value={commentInput}
-                onChange={e => setCommentInput(e.target.value)}
+                onChange={(e) => setCommentInput(e.target.value)}
               />
               <button onClick={createComment}>Comment</button>
             </div>
@@ -277,20 +287,20 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
         </div>
       )}
 
-      {/* Followers/Following Modal */}
       {listModal && (
         <div className="overlayStyle" onClick={closeList}>
-          <div className="modalStyle" onClick={e => e.stopPropagation()}>
+          <div className="modalStyle" onClick={(e) => e.stopPropagation()}>
             <button onClick={closeList}>X</button>
-            <h3>{listModal === "followers" ? "Followers" : "Following"}</h3>
 
-            {userList.length === 0 && <p>No users found</p>}
+            <h3>
+              {listModal === "followers" ? "Followers" : "Following"}
+            </h3>
 
-            {userList.map(u => (
+            {userList.map((u) => (
               <p
                 key={u.id}
                 style={{ cursor: "pointer" }}
-                onClick={e => {
+                onClick={(e) => {
                   e.stopPropagation();
                   closeList();
                   openUserProfile(u.id);
