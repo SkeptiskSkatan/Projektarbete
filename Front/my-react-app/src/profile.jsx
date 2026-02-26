@@ -231,9 +231,10 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
               <p
                 key={u.id}
                 style={{ cursor: "pointer" }}
-                onClick={() => {
-                  closeList()
-                  openUserProfile(u.id)
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeList();
+                  openUserProfile(u.id);
                 }}
               >
                 {u.username}

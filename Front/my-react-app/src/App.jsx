@@ -92,15 +92,16 @@ function App() {
         <button onClick={logout}>Logout</button>
       </nav>
 
-      {view === "feed" && (
+      {view === "feed" && ( //gör så man kan se feed, utan den syns inget i feed
         <Feed userId={userId} openUserProfile={openUserProfile} />
       )}
-      {view === "profile" && <Profile userId={userId} />}
-      {view === "userProfile" && selectedUserId && (<Profile userId={selectedUserId} currentUserId={userId} />
-
-)}
+      {view === "profile" && (<Profile userId={userId} currentUserId={userId} openUserProfile={openUserProfile}
+        />
+      )}
+      {view === "userProfile" && selectedUserId && (<Profile userId={selectedUserId} currentUserId={userId} openUserProfile={openUserProfile}
+        />
+      )}
     </>
-  )
-}
+  )}
 
 export default App
