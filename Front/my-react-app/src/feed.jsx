@@ -31,6 +31,14 @@ function Post({ p, userId, openUserProfile, openPost }) {
     setLikes(liked ? likes - 1 : likes + 1);
   }
 
+  const formattedDate = new Date(p.created_at)
+    .toLocaleDateString("sv-SE") +
+    " kl. " +
+    new Date(p.created_at).toLocaleTimeString("sv-SE", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
   return (
     <div className="post">
       <div className="post-header">
@@ -43,7 +51,10 @@ function Post({ p, userId, openUserProfile, openPost }) {
         >
           {p.username}
         </span>
+      <div className="post-date">
+        {formattedDate}
       </div>
+    </div>
 
       <div onClick={() => openPost(p)} className="post-content">
         {p.content}

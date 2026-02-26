@@ -149,3 +149,13 @@ textarea {
   width: 100%;
   resize: none;
 }
+
+.post-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.post-date {
+  font-size: 12px;
+  color: rgb(84, 84, 84);
+}

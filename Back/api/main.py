@@ -151,7 +151,7 @@ def create_post(post: Post):
 def get_posts(limit: int = 10, skip: int = 0):
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT posts.id, posts.content, users.username, posts.user_id
+        SELECT posts.id, posts.content, users.username, posts.user_id, posts.created_at
         FROM posts
         JOIN users ON posts.user_id = users.id
         ORDER BY posts.created_at DESC
@@ -159,14 +159,12 @@ def get_posts(limit: int = 10, skip: int = 0):
     """, (limit, skip))
     rows = cursor.fetchall()
     return [{
-
-            "id": r[0], 
-            "content": r[1], 
-            "username": r[2], 
-            "user_id": r[3]}
-
-            for r in rows
-        ]
+        "id": r[0],
+        "content": r[1],
+        "username": r[2],
+        "user_id": r[3],
+        "created_at": r[4]
+    } for r in rows]
 
 
 @app.get("/users/{user_id}")
@@ -204,7 +202,7 @@ def get_user_posts(user_id: int, limit: int = 10, skip: int = 0):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT posts.id, posts.content, users.username, posts.user_id
+        SELECT posts.id, posts.content, users.username, posts.user_id, posts.created_at
         FROM posts
         JOIN users ON posts.user_id = users.id
         WHERE posts.user_id = %s
@@ -214,16 +212,13 @@ def get_user_posts(user_id: int, limit: int = 10, skip: int = 0):
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    return [
-        {
-            "id": r[0], 
-            "content": r[1], 
-            "username": r[2], 
-            "user_id": r[3]
-        } 
-            
-        for r in rows
-    ]
+    return [{
+        "id": r[0],
+        "content": r[1],
+        "username": r[2],
+        "user_id": r[3],
+        "created_at": r[4]
+    } for r in rows]
 
 
 @app.post("/comments")
@@ -417,7 +412,7 @@ def get_following_posts(user_id: int, limit: int = 10, skip: int = 0):
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT posts.id, posts.content, users.username, posts.user_id
+        SELECT posts.id, posts.content, users.username, posts.user_id, posts.created_at
         FROM posts
         JOIN users ON posts.user_id = users.id
         WHERE posts.user_id IN (
@@ -432,15 +427,13 @@ def get_following_posts(user_id: int, limit: int = 10, skip: int = 0):
 
     rows = cursor.fetchall()
 
-    return [
-        {
-            "id": r[0],
-            "content": r[1],
-            "username": r[2],
-            "user_id": r[3]
-        }
-        for r in rows
-    ]
+    return [{
+        "id": r[0],
+        "content": r[1],
+        "username": r[2],
+        "user_id": r[3],
+        "created_at": r[4]
+    } for r in rows]
 
 @app.delete("/posts/{post_id}/{user_id}")
 def delete_post(post_id: int, user_id: int):
