@@ -409,3 +409,67 @@ def get_following(user_id: int):
     rows = cursor.fetchall()
 
     return [{"id": r[0], "username": r[1]} for r in rows]
+
+
+
+@app.get("/posts/following")
+def get_following_posts(user_id: int, limit: int = 10, skip: int = 0):
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT posts.id, posts.content, users.username, posts.user_id
+        FROM posts
+        JOIN users ON posts.user_id = users.id
+        WHERE posts.user_id IN (
+            SELECT following_id 
+            FROM followers 
+            WHERE follower_id = %s
+        )
+        AND posts.user_id != %s   -- 🔥 EXCLUDE YOUR OWN POSTS
+        ORDER BY posts.created_at DESC
+        LIMIT %s OFFSET %s
+    """, (user_id, user_id, limit, skip))
+
+    rows = cursor.fetchall()
+
+    return [
+        {
+            "id": r[0],
+            "content": r[1],
+            "username": r[2],
+            "user_id": r[3]
+        }
+        for r in rows
+    ]
+
+@app.delete("/posts/{post_id}/{user_id}")
+def delete_post(post_id: int, user_id: int):
+    cursor = conn.cursor()
+
+    # Kontrollera att posten finns och ägs av user
+    cursor.execute(
+        "SELECT user_id FROM posts WHERE id = %s",
+        (post_id,)
+    )
+    result = cursor.fetchone()
+
+    if not result:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    owner_id = result[0]
+
+    if owner_id != user_id:
+        raise HTTPException(status_code=403, detail="Not allowed")
+
+    # Ta bort relaterade likes
+    cursor.execute("DELETE FROM likes WHERE post_id = %s", (post_id,))
+
+    # Ta bort relaterade comments
+    cursor.execute("DELETE FROM comments WHERE post_id = %s", (post_id,))
+
+    # Ta bort posten
+    cursor.execute("DELETE FROM posts WHERE id = %s", (post_id,))
+
+    conn.commit()
+
+    return {"message": "Post deleted"}

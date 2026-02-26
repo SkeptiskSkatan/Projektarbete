@@ -9,6 +9,7 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
   const [commentInput, setCommentInput] = useState("")
   const [isFollowing, setIsFollowing] = useState(false)
   const [stats, setStats] = useState({ followers_count: 0, following_count: 0 })
+  
 
   // ✅ NYTT
   const [listModal, setListModal] = useState(null)
@@ -210,6 +211,8 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
         </div>
       )}
 
+
+
       {/* ✅ NYTT – Followers/Following Modal */}
       {listModal && (
         <div className="overlayStyle" onClick={closeList}>
@@ -243,3 +246,5 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
     </>
   )
 }
+
+
