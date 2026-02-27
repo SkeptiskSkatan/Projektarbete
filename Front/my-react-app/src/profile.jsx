@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PostList from "./postList";
 import "./main.css";
 
 export default function Profile({ userId, currentUserId, openUserProfile }) {
@@ -21,15 +22,17 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
     if (!userId) return;
 
     fetch(`http://localhost:8000/users/${userId}`)
-      .then((res) => res.json())
-      .then(setUser);
+      .then(res => res.json())
+      .then(setUser)
+      .catch(err => console.error(err));
 
     fetch(`http://localhost:8000/users/${userId}/posts`)
       .then((res) => res.json())
       .then((data) => {
         setPosts(data);
-        data.forEach((p) => fetchLikes(p.id));
-      });
+        data.forEach(p => fetchLikes(p.id)); // hämta likes för varje post
+      })
+      .catch(err => console.error(err));
 
     fetch(`http://localhost:8000/users/${userId}/follow_stats`)
       .then((res) => res.json())
@@ -44,6 +47,9 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
     }
   }, [userId, currentUserId]);
 
+  // =========================
+  // Follow/unfollow
+  // =========================
   async function toggleFollow() {
     const endpoint = isFollowing ? "unfollow" : "follow";
 
@@ -169,85 +175,93 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
   return (
     <>
       <h2>Profile</h2>
-
       <p><b>Username:</b> {user.username}</p>
       <p><b>Joined:</b> {new Date(user.created_at).toLocaleDateString()}</p>
 
-      <div style={{ display: "flex", gap: "15px", marginBottom: "10px" }}>
-        <span style={{ cursor: "pointer" }} onClick={() => openList("followers")}>
+      {/* Stats */}
+      <div
+        style={{
+          display: "flex",
+          gap: "15px",
+          marginBottom: "10px",
+        }}
+      >
+        <span
+          style={{ cursor: "pointer" }}
+          onClick={() => openList("followers")}
+        >
           <b>{stats.followers_count}</b> Followers
         </span>
-
         <span style={{ cursor: "pointer" }} onClick={() => openList("following")}>
           <b>{stats.following_count}</b> Following
         </span>
       </div>
 
-      {posts.map((p) => {
-        const liked = likes[p.id]?.liked;
-        const likesCount = likes[p.id]?.likes_count || 0;
+      {currentUserId && userId !== currentUserId && (
+        <button
+          onClick={toggleFollow}
+          style={{
+            backgroundColor: isFollowing ? "#ccc" : "#007bff",
+            color: "white",
+            border: "none",
+            padding: "5px 15px",
+            borderRadius: "5px",
+            cursor: "pointer",
+            marginBottom: "15px",
+          }}
+        >
+          {isFollowing ? "Unfollow" : "Follow"}
+        </button>
+      )}
 
-        const formattedDate =
-          new Date(p.created_at).toLocaleDateString("sv-SE") +
-          " kl. " +
-          new Date(p.created_at).toLocaleTimeString("sv-SE", {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
+      <h3>Posts ({posts.length})</h3>
 
-        return (
-          <div key={p.id} className="post">
-
-            <div className="post-header">
-              <span
-                className="username-link"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openUserProfile(p.user_id);
-                }}
-              >
-                {p.username}
-              </span>
-
-              <div className="post-date">
-                {formattedDate}
-              </div>
-            </div>
-
-            <div onClick={() => openPost(p)} className="post-content">
-              {p.content}
-            </div>
-
-            <div style={{ marginTop: "8px", fontSize: "16px" }}>
-              {liked ? "❤️" : "🤍"} {likesCount}
-            </div>
-
-            <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
-              <button onClick={() => toggleLike(p.id)}>
-                {liked ? "Dislike" : "Like"}
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openPost(p);
-                }}
-              >
-                Comment
-              </button>
-            </div>
+      {posts.map(p => (
+        <div key={p.id} className="post">
+          <div className="post-header">
+            <b
+              onClick={e => {
+                e.stopPropagation();
+                openUserProfile(p.user_id);
+              }}
+            >
+              {p.username}
+            </b>
           </div>
-        );
-      })}
+
+          <div onClick={() => openPost(p)} className="post-content">
+            {p.content}
+          </div>
+
+          {/* Like-knapp med hjärta och färg */}
+          <div className="post-like">
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                toggleLike(p.id);
+              }}
+              style={{
+                backgroundColor: "transparent",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "1rem",
+              }}
+            >
+              {likes[p.id]?.liked ? "❤️" : "🤍"} {likes[p.id]?.likes_count || 0}
+            </button>
+          </div>
+        </div>
+      ))}
 
       {selectedPost && (
         <div className="overlayStyle" onClick={closeModal}>
-          <div className="modalStyle" onClick={(e) => e.stopPropagation()}>
+          <div className="modalStyle" onClick={e => e.stopPropagation()}>
             <button onClick={closeModal}>X</button>
 
             <h3>{selectedPost.username}</h3>
             <p>{selectedPost.content}</p>
 
+            {/* 🔴 DELETE BUTTON */}
             {selectedPost.user_id === currentUserId && (
               <button
                 onClick={deletePost}
@@ -279,22 +293,24 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
               <input
                 placeholder="Comment"
                 value={commentInput}
-                onChange={(e) => setCommentInput(e.target.value)}
+                onChange={e => setCommentInput(e.target.value)}
               />
-              <button onClick={createComment}>Comment</button>
+              <button onClick={createComment}>
+                Comment
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Followers/Following Modal */}
       {listModal && (
         <div className="overlayStyle" onClick={closeList}>
-          <div className="modalStyle" onClick={(e) => e.stopPropagation()}>
+          <div className="modalStyle" onClick={e => e.stopPropagation()}>
             <button onClick={closeList}>X</button>
+            <h3>{listModal === "followers" ? "Followers" : "Following"}</h3>
 
-            <h3>
-              {listModal === "followers" ? "Followers" : "Following"}
-            </h3>
+            {userList.length === 0 && <p>No users found</p>}
 
             {userList.map((u) => (
               <p
