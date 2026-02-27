@@ -50,9 +50,9 @@ class LikeRequest(BaseModel):
 def get_connection():
     return psycopg2.connect(
         host="localhost",
-        database="Dired_racoon2",
+        database="full_db",
         user="postgres",
-        password="Kamel1212"
+        password="5DZ96PDs4U8aXs4eeTDGnVvQCwfzubJy2enxDhGw4dUHNv9wNMevUqEMQrXxxBnP"
     )
 
 def hash_password(password: str) -> str:
