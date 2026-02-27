@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-// PostItem.jsx
->>>>>>> 9bb42d4737be2e3b546a7ae0f4c2ce4c3ca1a767
 function PostItem({
   post,
   likeInfo,
