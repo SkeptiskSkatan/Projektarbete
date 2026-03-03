@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from database import conn 
+from typing import Optional
 import bcrypt
 import psycopg2
 import base64
@@ -33,7 +34,7 @@ class UserLogin(BaseModel):
 class Post(BaseModel):
     content: str
     user_id: int
-    image_data: str = None
+    image_data: Optional[str] = None
 
 class CommentCreate(BaseModel):
     content: str
