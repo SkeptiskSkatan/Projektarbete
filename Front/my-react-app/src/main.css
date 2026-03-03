@@ -95,13 +95,6 @@ input{
     width: 70%;
 }
 
-
-
-
-
-
-
-
 .post {
   border: 1px solid gray;
   padding: 12px;
@@ -121,8 +114,6 @@ input{
 .post-like {
   margin-top: 10px;
 }
-
-
 
 .overlayStyle {
   position: fixed;
@@ -159,9 +150,6 @@ textarea {
   font-size: 12px;
   color: rgb(84, 84, 84);
 }
-
-
-
 
 .post-image {
   width: 100%;
