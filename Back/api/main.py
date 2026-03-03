@@ -451,7 +451,7 @@ def get_following_posts(user_id: int, limit: int = 10, skip: int = 0):
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT posts.id, posts.content, users.username, posts.user_id, posts.created_at
+        SELECT posts.id, posts.content, users.username, posts.user_id, posts.created_at, posts.image_data
         FROM posts
         JOIN users ON posts.user_id = users.id
         WHERE posts.user_id IN (
@@ -459,7 +459,7 @@ def get_following_posts(user_id: int, limit: int = 10, skip: int = 0):
             FROM followers 
             WHERE follower_id = %s
         )
-        AND posts.user_id != %s   -- 🔥 EXCLUDE YOUR OWN POSTS
+        AND posts.user_id != %s
         ORDER BY posts.created_at DESC
         LIMIT %s OFFSET %s
     """, (user_id, user_id, limit, skip))
@@ -471,7 +471,8 @@ def get_following_posts(user_id: int, limit: int = 10, skip: int = 0):
         "content": r[1],
         "username": r[2],
         "user_id": r[3],
-        "created_at": r[4]
+        "created_at": r[4],
+        "image_data": f"data:image/jpeg;base64,{base64.b64encode(r[5]).decode('utf-8')}" if r[5] else None
     } for r in rows]
 
 @app.delete("/posts/{post_id}/{user_id}")
