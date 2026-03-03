@@ -18,11 +18,21 @@ function PostItem({
         </b>
       </div>
 
-      <div
-        onClick={() => onOpenPost(post)}
-        className="post-content"
-      >
+      <div onClick={() => onOpenPost(post)} className="post-content">
         {post.content}
+
+        {post.image_data && (
+          <img
+            src={post.image_data}
+            alt="post"
+            className="post-image"
+            style={{
+              width: "100%",
+              marginTop: "10px",
+              borderRadius: "8px",
+            }}
+          />
+        )}
       </div>
 
       <div className="post-like">
