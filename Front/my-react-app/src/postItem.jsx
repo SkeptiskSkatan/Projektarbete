@@ -114,7 +114,7 @@ export default function PostItem({ p, userId, openUserProfile, onDelete }) {
             <img
               src={p.image_data}
               alt="post"
-              style={{ width: "100%", marginTop: "10px", borderRadius: "8px" }}
+              className="image_content"
             />
           )}
         </div>
