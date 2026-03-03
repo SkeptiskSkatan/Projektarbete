@@ -159,3 +159,20 @@ textarea {
   font-size: 12px;
   color: rgb(84, 84, 84);
 }
+
+
+
+
+.post-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+
+.like-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}

@@ -56,7 +56,19 @@ function Post({ p, userId, openUserProfile, openPost }) {
 
       <div onClick={() => openPost(p)} className="post-content">
         {p.content}
-      </div>
+
+  {p.image_data && (
+    <img
+      src={p.image_data}
+      alt="post"
+      style={{
+        width: "100%",
+        marginTop: "10px",
+        borderRadius: "8px",
+      }}
+    />
+  )}
+</div>
 
       {/* ❤️ Likes display */}
       <div style={{ marginTop: "8px", fontSize: "16px" }}>
@@ -91,6 +103,7 @@ function Post({ p, userId, openUserProfile, openPost }) {
 export default function Feed({ userId, logout, openUserProfile }) {
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState("");
+  const [image, setImage] = useState(null);
   const [skip, setSkip] = useState(0);
   const [loading, setLoading] = useState(false);
   const [feedType, setFeedType] = useState("all");
@@ -145,16 +158,30 @@ export default function Feed({ userId, logout, openUserProfile }) {
     setLoading(false);
   }
 
-  async function createPost() {
-    if (!content.trim()) return;
+    async function createPost() {
+    if (!content.trim() && !image) return;
+
+    let base64String = null;
+    if (image) {
+      base64String = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(image); // Convert file to Base64
+      });
+    }
 
     await fetch("http://localhost:8000/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, user_id: userId }),
+      body: JSON.stringify({ 
+        content, 
+        user_id: userId, 
+        image_data: base64String // 2. Send to backend
+      }),
     });
 
     setContent("");
+    setImage(null); // 3. Reset input
     loadPosts(0);
   }
 
@@ -252,19 +279,28 @@ async function deletePost() {
         </button>
       </div> 
       
-    {feedType === "all" && (
-      <div>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Skriv något..."
-          rows="3"
-        />
-        <button onClick={createPost} style={{ marginTop: "10px" }}>
-          Post
-        </button>
-      </div>
-    )}  
+{feedType === "all" && (
+  <div style={{ marginBottom: "15px" }}>
+    <textarea
+      value={content}
+      onChange={(e) => setContent(e.target.value)}
+      placeholder="Write something..."
+      rows="3"
+      style={{ width: "100%", padding: "8px", borderRadius: "5px" }}
+    />
+
+    <input
+      type="file"
+      accept="image/*"
+      onChange={(e) => setImage(e.target.files[0])}
+      style={{ marginTop: "10px" }}
+    />
+
+    <button onClick={createPost} >
+      Post
+    </button>
+  </div>
+)}
 
       <div style={{ marginTop: "30px" }}>
         {posts.map((p, index) => {

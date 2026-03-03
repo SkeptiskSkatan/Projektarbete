@@ -214,9 +214,21 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
               </div>
             </div>
 
-            <div onClick={() => openPost(p)} className="post-content">
-              {p.content}
-            </div>
+<div onClick={() => openPost(p)} className="post-content">
+  {p.content}
+
+  {p.image_data && (
+    <img
+      src={p.image_data}
+      alt="post"
+      style={{
+        width: "100%",
+        marginTop: "10px",
+        borderRadius: "8px",
+      }}
+    />
+  )}
+</div>
 
             <div style={{ marginTop: "8px", fontSize: "16px" }}>
               {liked ? "❤️" : "🤍"} {likesCount}
@@ -245,8 +257,20 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
           <div className="modalStyle" onClick={(e) => e.stopPropagation()}>
             <button onClick={closeModal}>X</button>
 
-            <h3>{selectedPost.username}</h3>
-            <p>{selectedPost.content}</p>
+<h3>{selectedPost.username}</h3>
+<p>{selectedPost.content}</p>
+
+{selectedPost.image_data && (
+  <img
+    src={selectedPost.image_data}
+    alt="post"
+    style={{
+      width: "100%",
+      marginTop: "10px",
+      borderRadius: "8px",
+    }}
+  />
+)}
 
             {selectedPost.user_id === currentUserId && (
               <button
