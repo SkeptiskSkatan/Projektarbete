@@ -1,8 +1,8 @@
-import PostItem from "./postItem";
+import PostItem from "./PostItem";
 
 function PostList({
-  posts,
-  likes,
+  posts = [],
+  likes = {},
   onOpenPost,
   onOpenUser,
   onToggleLike,
@@ -10,7 +10,9 @@ function PostList({
 }) {
   return (
     <>
-      <h3>{title} ({posts.length})</h3>
+      <h3>
+        {title} ({posts.length})
+      </h3>
 
       {posts.map((p) => (
         <PostItem

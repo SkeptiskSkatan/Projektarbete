@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from database import conn 
 import bcrypt
 import psycopg2
+import base64
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -32,6 +33,7 @@ class UserLogin(BaseModel):
 class Post(BaseModel):
     content: str
     user_id: int
+    image_data: str = None
 
 class CommentCreate(BaseModel):
     content: str
@@ -50,9 +52,9 @@ class LikeRequest(BaseModel):
 def get_connection():
     return psycopg2.connect(
         host="localhost",
-        database="Dired_racoon2",
+        database="full_db",
         user="postgres",
-        password="Kamel1212"
+        password="5DZ96PDs4U8aXs4eeTDGnVvQCwfzubJy2enxDhGw4dUHNv9wNMevUqEMQrXxxBnP"
     )
 
 def hash_password(password: str) -> str:
@@ -139,9 +141,18 @@ def login(user: UserLogin):
 
 @app.post("/posts")
 def create_post(post: Post):
+    binary_data = None
+    if post.image_data:
+        # Strip the header (e.g., "data:image/jpeg;base64,") if present
+        if "," in post.image_data:
+            header, encoded = post.image_data.split(",", 1)
+        else:
+            encoded = post.image_data
+        binary_data = base64.b64decode(encoded) # Convert to bytes for BYTEA
+
     cursor.execute(
-        "INSERT INTO posts (content, user_id) VALUES (%s, %s)",
-        (post.content, post.user_id)
+        "INSERT INTO posts (content, user_id, image_data) VALUES (%s, %s, %s)",
+        (post.content, post.user_id, binary_data) # psycopg2 handles bytes as BYTEA
     )
     conn.commit()
     return {"message": "Post created"}
@@ -151,20 +162,30 @@ def create_post(post: Post):
 def get_posts(limit: int = 10, skip: int = 0):
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT posts.id, posts.content, users.username, posts.user_id, posts.created_at
+        SELECT posts.id, posts.content, users.username, posts.user_id, posts.created_at, posts.image_data
         FROM posts
         JOIN users ON posts.user_id = users.id
         ORDER BY posts.created_at DESC
         LIMIT %s OFFSET %s
     """, (limit, skip))
     rows = cursor.fetchall()
-    return [{
-        "id": r[0],
-        "content": r[1],
-        "username": r[2],
-        "user_id": r[3],
-        "created_at": r[4]
-    } for r in rows]
+    
+    posts = []
+    for r in rows:
+        # Convert BYTEA back to Base64 so the <img> tag can read it
+        img_base64 = None
+        if r[5]:
+            img_base64 = f"data:image/jpeg;base64,{base64.b64encode(r[5]).decode('utf-8')}"
+            
+        posts.append({
+            "id": r[0],
+            "content": r[1],
+            "username": r[2],
+            "user_id": r[3],
+            "created_at": r[4],
+            "image_data": img_base64
+        })
+    return posts
 
 
 @app.get("/users/{user_id}")
@@ -201,24 +222,42 @@ def get_user_profile(user_id: int):
 def get_user_posts(user_id: int, limit: int = 10, skip: int = 0):
     conn = get_connection()
     cursor = conn.cursor()
+
     cursor.execute("""
-        SELECT posts.id, posts.content, users.username, posts.user_id, posts.created_at
+        SELECT posts.id,
+               posts.content,
+               users.username,
+               posts.user_id,
+               posts.created_at,
+               posts.image_data
         FROM posts
         JOIN users ON posts.user_id = users.id
         WHERE posts.user_id = %s
         ORDER BY posts.created_at DESC
         LIMIT %s OFFSET %s
     """, (user_id, limit, skip))
+
     rows = cursor.fetchall()
+
+    posts = []
+    for r in rows:
+        img_base64 = None
+        if r[5]:
+            img_base64 = f"data:image/jpeg;base64,{base64.b64encode(r[5]).decode('utf-8')}"
+
+        posts.append({
+            "id": r[0],
+            "content": r[1],
+            "username": r[2],
+            "user_id": r[3],
+            "created_at": r[4],
+            "image_data": img_base64
+        })
+
     cursor.close()
     conn.close()
-    return [{
-        "id": r[0],
-        "content": r[1],
-        "username": r[2],
-        "user_id": r[3],
-        "created_at": r[4]
-    } for r in rows]
+
+    return posts
 
 
 @app.post("/comments")
