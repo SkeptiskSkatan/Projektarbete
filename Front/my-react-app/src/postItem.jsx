@@ -119,14 +119,10 @@ export default function PostItem({ p, userId, openUserProfile, onDelete }) {
           )}
         </div>
 
-        <div style={{ marginTop: "8px", fontSize: "16px" }}>
+        <div onClick={toggleLike} style={{ marginTop: "8px", fontSize: "16px" }}>
           {liked ? "❤️" : "🤍"} {likes}
         </div>
 
-        <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
-          <button onClick={toggleLike}>{liked ? "Dislike" : "Like"}</button>
-          <button onClick={openPost}>Comment</button>
-        </div>
       </div>
 
       {selectedPost && (
