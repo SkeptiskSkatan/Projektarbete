@@ -84,24 +84,30 @@ function App() {
   }
 
     // LOGGED IN
-  return (
-    <>
-      <nav style={{ marginBottom: "1rem" }}>
-        <button onClick={() => setView("feed")}>Feed</button>
-        <button onClick={() => setView("profile")}>Profile</button>
-        <button onClick={logout}>Logout</button>
-      </nav>
 
-      {view === "feed" && ( //gör så man kan se feed, utan den syns inget i feed
-        <Feed userId={userId} openUserProfile={openUserProfile} />
-      )}
-      {view === "profile" && (<Profile userId={userId} currentUserId={userId} openUserProfile={openUserProfile}
-        />
-      )}
-      {view === "userProfile" && selectedUserId && (<Profile userId={selectedUserId} currentUserId={userId} openUserProfile={openUserProfile}
-        />
-      )}
-    </>
-  )}
+    
+return (
+  <>
+    <div className="sidebar">
+      <button onClick={() => setView("feed")}>Feed</button>
+      <button onClick={() => setView("profile")}>Profile</button>
+      <button onClick={logout}>Logout</button>
+    </div>
+
+    <div className="layout">
+      <div className="main-content">
+        {view === "feed" && (
+          <Feed userId={userId} openUserProfile={openUserProfile} />
+        )}
+        {view === "profile" && (
+          <Profile userId={userId} currentUserId={userId} openUserProfile={openUserProfile} />
+        )}
+        {view === "userProfile" && selectedUserId && (
+          <Profile userId={selectedUserId} currentUserId={userId} openUserProfile={openUserProfile} />
+        )}
+      </div>
+    </div>
+  </>
+)}
 
 export default App
