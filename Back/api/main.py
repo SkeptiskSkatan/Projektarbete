@@ -49,6 +49,10 @@ class LikeRequest(BaseModel):
     user_id: int
     post_id: int
 
+class ProfilePicture(BaseModel):
+    user_id: int
+    image_data: str
+
 # Det ändrar detta 
 def get_connection():
     return psycopg2.connect(
@@ -507,3 +511,29 @@ def delete_post(post_id: int, user_id: int):
     conn.commit()
 
     return {"message": "Post deleted"}
+
+@app.post("/users/{user_id}/profile_picture")
+def upload_profile_picture(user_id: int, body: ProfilePicture):
+    if "," in body.image_data:
+        header, encoded = body.image_data.split(",", 1)
+    else:
+        encoded = body.image_data
+    binary_data = base64.b64decode(encoded)
+
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE users SET profile_picture = %s WHERE id = %s",
+        (binary_data, user_id)
+    )
+    conn.commit()
+    return {"message": "Profile picture updated"}
+
+@app.get("/users/{user_id}/profile_picture")
+def get_profile_picture(user_id: int):
+    cursor = conn.cursor()
+    cursor.execute("SELECT profile_picture FROM users WHERE id = %s", (user_id,))
+    row = cursor.fetchone()
+    if not row or not row[0]:
+        return {"image_data": None}
+    img_base64 = f"data:image/jpeg;base64,{base64.b64encode(row[0]).decode('utf-8')}"
+    return {"image_data": img_base64}

@@ -9,6 +9,7 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
   const [stats, setStats] = useState({ followers_count: 0, following_count: 0 });
   const [listModal, setListModal] = useState(null);
   const [userList, setUserList] = useState([]);
+  const [profilePic, setProfilePic] = useState(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -30,6 +31,10 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
         .then((res) => res.json())
         .then((data) => setIsFollowing(data.is_following));
     }
+
+    fetch(`http://localhost:8000/users/${userId}/profile_picture`)
+      .then((res) => res.json())
+      .then((data) => setProfilePic(data.image_data));
   }, [userId, currentUserId]);
 
   async function toggleFollow() {
@@ -64,14 +69,79 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
     setUserList([]);
   }
 
+  async function uploadProfilePicture(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const base64String = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+
+    await fetch(`http://localhost:8000/users/${userId}/profile_picture`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId, image_data: base64String }),
+    });
+
+    setProfilePic(base64String);
+  }
+
   if (!user) return <p>Loading profile...</p>;
 
   return (
     <>
       <h2>Profile</h2>
 
-      <p><b>Username:</b> {user.username}</p>
-      <p><b>Joined:</b> {new Date(user.created_at).toLocaleDateString()}</p>
+<div style={{ display: "flex", alignItems: "center", gap: "15px", marginBottom: "15px" }}>
+  <div style={{ position: "relative" }}>
+    {userId === currentUserId ? (
+      <label style={{ cursor: "pointer" }}>
+        {profilePic ? (
+          <img
+            src={profilePic}
+            alt="profile"
+            style={{ width: "80px", height: "80px", borderRadius: "50%", objectFit: "cover" }}
+          />
+        ) : (
+          <div style={{
+            width: "80px", height: "80px", borderRadius: "50%",
+            backgroundColor: "#ccc", display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            No pic
+          </div>
+        )}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={uploadProfilePicture}
+          style={{ display: "none" }}
+        />
+      </label>
+    ) : (
+      profilePic ? (
+        <img
+          src={profilePic}
+          alt="profile"
+          style={{ width: "80px", height: "80px", borderRadius: "50%", objectFit: "cover" }}
+        />
+      ) : (
+        <div style={{
+          width: "80px", height: "80px", borderRadius: "50%",
+          backgroundColor: "#ccc", display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          No pic
+        </div>
+      )
+    )}
+  </div>
+
+  <div>
+    <p><b>Username:</b> {user.username}</p>
+    <p><b>Joined:</b> {new Date(user.created_at).toLocaleDateString()}</p>
+  </div>
+</div>
 
       <div style={{ display: "flex", gap: "15px", marginBottom: "10px" }}>
         <span style={{ cursor: "pointer" }} onClick={() => openList("followers")}>
