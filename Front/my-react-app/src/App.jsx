@@ -10,8 +10,8 @@ function App() {
   const [showLogin, setShowLogin] = useState(true)
   const [view, setView] = useState("feed")
   const [selectedUserId, setSelectedUserId] = useState(null)
+  const [showPostModal, setShowPostModal] = useState(false);
 
-  // 🔥 styr popupen
   const [showWelcome, setShowWelcome] = useState(true)
 
   function logout() {
@@ -85,19 +85,25 @@ function App() {
 
     // LOGGED IN
 
-    
+
 return (
   <>
     <div className="sidebar">
       <button onClick={() => setView("feed")}>Feed</button>
       <button onClick={() => setView("profile")}>Profile</button>
+      <button onClick={() => setShowPostModal(true)}>New Post</button>
       <button onClick={logout}>Logout</button>
     </div>
 
     <div className="layout">
       <div className="main-content">
         {view === "feed" && (
-          <Feed userId={userId} openUserProfile={openUserProfile} />
+          <Feed 
+            userId={userId} 
+            openUserProfile={openUserProfile}
+            showPostModal={showPostModal}
+            setShowPostModal={setShowPostModal}
+          />
         )}
         {view === "profile" && (
           <Profile userId={userId} currentUserId={userId} openUserProfile={openUserProfile} />

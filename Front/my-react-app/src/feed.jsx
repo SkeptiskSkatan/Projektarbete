@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import PostItem from "./postItem";
 import "./main.css";
 
-export default function Feed({ userId, openUserProfile }) {
+export default function Feed({ userId, openUserProfile, showPostModal, setShowPostModal }) {
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
@@ -17,13 +17,11 @@ export default function Feed({ userId, openUserProfile }) {
     (node) => {
       if (loading) return;
       if (observer.current) observer.current.disconnect();
-
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
           loadPosts(skip);
         }
       });
-
       if (node) observer.current.observe(node);
     },
     [loading, skip, feedType]
@@ -75,6 +73,7 @@ export default function Feed({ userId, openUserProfile }) {
 
     setContent("");
     setImage(null);
+    setShowPostModal(false);
     loadPosts(0);
   }
 
@@ -101,26 +100,7 @@ export default function Feed({ userId, openUserProfile }) {
         </button>
       </div>
 
-      {feedType === "all" && (
-        <div style={{ marginBottom: "15px" }}>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Write something..."
-            rows="3"
-            style={{ width: "100%", padding: "8px", borderRadius: "5px" }}
-          />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImage(e.target.files[0])}
-            style={{ marginTop: "10px" }}
-          />
-          <button onClick={createPost}>Post</button>
-        </div>
-      )}
-
-      {/*Posts */}
+      {/*Posts*/}
       <div style={{ marginTop: "30px" }}>
         {posts.map((p, index) => {
           const isLast = index === posts.length - 1;
@@ -138,6 +118,34 @@ export default function Feed({ userId, openUserProfile }) {
       </div>
 
       {loading && <p style={{ textAlign: "center" }}>Loading...</p>}
+
+      {showPostModal && (
+        <div className="overlayStyle" onClick={() => setShowPostModal(false)}>
+          <div className="modalStyle" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setShowPostModal(false)}>X</button>
+            <h3>New Post</h3>
+
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write something..."
+              rows="4"
+              style={{ width: "100%", padding: "8px", borderRadius: "5px", boxSizing: "border-box" }}
+            />
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImage(e.target.files[0])}
+              style={{ marginTop: "10px", display: "block" }}
+            />
+
+            <button onClick={createPost} style={{ marginTop: "10px" }}>
+              Post
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
