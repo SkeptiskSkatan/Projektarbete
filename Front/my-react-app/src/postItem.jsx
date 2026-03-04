@@ -161,11 +161,7 @@ export default function PostItem({ p, userId, openUserProfile, onDelete }) {
             <hr />
             <h4>Comments</h4>
 
-            {comments.map((c, i) => (
-              <p key={i}>
-                <b>{c.username}</b>: {c.content}
-              </p>
-            ))}
+
 
             <div style={{ marginTop: "15px" }}>
               <input
@@ -175,6 +171,14 @@ export default function PostItem({ p, userId, openUserProfile, onDelete }) {
               />
               <button onClick={createComment}>Comment</button>
             </div>
+
+            {comments.map((c, i) => (
+              <p key={i}>
+                <b>{c.username}</b>: {c.content}
+              </p>
+            ))}
+
+
           </div>
         </div>
       )}
