@@ -113,6 +113,8 @@ input{
   flex-direction: column; 
   gap: 6px;
   word-break: break-word;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .post-header {
@@ -182,14 +184,12 @@ textarea {
 
 .image_content{
 
-  max-width: 100%;
+  width: 100%;
   max-height: 300px;
-  object-fit: contain;
-  object-position: left;   
+  object-fit: cover;
   margin-top: 10px;
   border-radius: 8px;
   display: block;
-  overflow: hidden;
 
 }
 
