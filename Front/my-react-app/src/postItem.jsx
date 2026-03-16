@@ -8,7 +8,7 @@ export default function PostItem({ p, userId, openUserProfile, onDelete }) {
   const [commentInput, setCommentInput] = useState("");
 
   useEffect(() => {
-    fetch(`import.meta.env.VITE_API_URL/posts/${p.id}/likes/${userId}`)
+    fetch(`${import.meta.env.VITE_API_URL}/posts/${p.id}/likes/${userId}`)
       .then((res) => res.json())
       .then((data) => {
         setLikes(data.likes_count);
@@ -19,8 +19,8 @@ export default function PostItem({ p, userId, openUserProfile, onDelete }) {
   async function toggleLike(e) {
     e.stopPropagation();
     const url = liked
-      ? "import.meta.env.VITE_API_URL/unlike"
-      : "import.meta.env.VITE_API_URL/like";
+      ? `${import.meta.env.VITE_API_URL}/unlike`
+      : `${import.meta.env.VITE_API_URL}/like`;
 
     await fetch(url, {
       method: "POST",
@@ -33,7 +33,7 @@ export default function PostItem({ p, userId, openUserProfile, onDelete }) {
   }
 
   async function fetchComments(postId) {
-    const res = await fetch(`import.meta.env.VITE_API_URL/posts/${postId}/comments`);
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${postId}/comments`);
     const data = await res.json();
     setComments(data);
   }
@@ -53,7 +53,7 @@ export default function PostItem({ p, userId, openUserProfile, onDelete }) {
   async function createComment() {
     if (!commentInput.trim()) return;
 
-    await fetch("import.meta.env.VITE_API_URL/comments", {
+    await fetch(`${import.meta.env.VITE_API_URL}/comments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -71,7 +71,7 @@ export default function PostItem({ p, userId, openUserProfile, onDelete }) {
     const confirmDelete = window.confirm("Are you sure you want to delete this post?");
     if (!confirmDelete) return;
 
-    const res = await fetch(`himport.meta.env.VITE_API_URL/posts/${p.id}/${userId}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${p.id}/${userId}`, {
       method: "DELETE",
     });
 
