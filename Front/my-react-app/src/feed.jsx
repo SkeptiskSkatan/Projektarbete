@@ -37,8 +37,8 @@ export default function Feed({ userId, openUserProfile, showPostModal, setShowPo
 
     const url =
       feedType === "all"
-        ? `http://localhost:8000/posts?limit=${limit}&skip=${newSkip}`
-        : `http://localhost:8000/posts/following?user_id=${userId}&limit=${limit}&skip=${newSkip}`;
+        ? `import.meta.env.VITE_API_URL/posts?limit=${limit}&skip=${newSkip}`
+        : `import.meta.env.VITE_API_URL/posts/following?user_id=${userId}&limit=${limit}&skip=${newSkip}`;
 
     const res = await fetch(url);
     const data = await res.json();
@@ -65,7 +65,7 @@ export default function Feed({ userId, openUserProfile, showPostModal, setShowPo
       });
     }
 
-    await fetch("http://localhost:8000/posts", {
+    await fetch("import.meta.env.VITE_API_URL/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content, user_id: userId, image_data: base64String }),

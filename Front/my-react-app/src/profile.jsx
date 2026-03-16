@@ -14,25 +14,25 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
   useEffect(() => {
     if (!userId) return;
 
-    fetch(`http://localhost:8000/users/${userId}`)
+    fetch(`import.meta.env.VITE_API_URL/users/${userId}`)
       .then((res) => res.json())
       .then(setUser);
 
-    fetch(`http://localhost:8000/users/${userId}/posts`)
+    fetch(`import.meta.env.VITE_API_URL/users/${userId}/posts`)
       .then((res) => res.json())
       .then(setPosts);
 
-    fetch(`http://localhost:8000/users/${userId}/follow_stats`)
+    fetch(`import.meta.env.VITE_API_URL/users/${userId}/follow_stats`)
       .then((res) => res.json())
       .then(setStats);
 
     if (currentUserId && userId !== currentUserId) {
-      fetch(`http://localhost:8000/is_following/${currentUserId}/${userId}`)
+      fetch(`import.meta.env.VITE_API_URL/is_following/${currentUserId}/${userId}`)
         .then((res) => res.json())
         .then((data) => setIsFollowing(data.is_following));
     }
 
-    fetch(`http://localhost:8000/users/${userId}/profile_picture`)
+    fetch(`import.meta.env.VITE_API_URL/users/${userId}/profile_picture`)
       .then((res) => res.json())
       .then((data) => setProfilePic(data.image_data));
   }, [userId, currentUserId]);
@@ -40,7 +40,7 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
   async function toggleFollow() {
     const endpoint = isFollowing ? "unfollow" : "follow";
 
-    await fetch(`http://localhost:8000/${endpoint}`, {
+    await fetch(`import.meta.env.VITE_API_URL/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ follower_id: currentUserId, following_id: userId }),
@@ -48,7 +48,7 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
 
     setIsFollowing(!isFollowing);
 
-    const res = await fetch(`http://localhost:8000/users/${userId}/follow_stats`);
+    const res = await fetch(`import.meta.env.VITE_API_URL/users/${userId}/follow_stats`);
     const newStats = await res.json();
     setStats(newStats);
   }
@@ -58,7 +58,7 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
   }
 
   async function openList(type) {
-    const res = await fetch(`http://localhost:8000/users/${userId}/${type}`);
+    const res = await fetch(`import.meta.env.VITE_API_URL/users/${userId}/${type}`);
     const data = await res.json();
     setUserList(data);
     setListModal(type);
@@ -79,7 +79,7 @@ export default function Profile({ userId, currentUserId, openUserProfile }) {
       reader.readAsDataURL(file);
     });
 
-    await fetch(`http://localhost:8000/users/${userId}/profile_picture`, {
+    await fetch(`import.meta.env.VITE_API_URL/users/${userId}/profile_picture`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: userId, image_data: base64String }),
