@@ -56,10 +56,11 @@ class ProfilePicture(BaseModel):
 # Det ändrar detta 
 def get_connection():
     return psycopg2.connect(
-        host="localhost",
-        database="full_db",
-        user="postgres",
-        password="5DZ96PDs4U8aXs4eeTDGnVvQCwfzubJy2enxDhGw4dUHNv9wNMevUqEMQrXxxBnP"
+        host="aws-1-eu-west-1.pooler.supabase.com",
+        dbname="postgres",
+        user="postgres.ztfvjvcknuhvxqythwsk",
+        password=os.environ["DB_PASSWORD"],
+        port=6543
     )
 
 def hash_password(password: str) -> str:
