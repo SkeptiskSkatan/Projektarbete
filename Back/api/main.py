@@ -5,6 +5,7 @@ from typing import Optional
 import bcrypt
 import psycopg2
 import base64
+import os
 from fastapi.middleware.cors import CORSMiddleware
 
 
