@@ -1,22 +1,56 @@
+* {
+  box-sizing: border-box;
+}
+ 
 body {
   background-color: rgb(175, 189, 189);
   margin: 0;
   display: flex;
   justify-content: center;
+  font-family: sans-serif;
 }
  
-.app_container{
+.app_container {
   width: 100%;
   max-width: 700px;
   padding: 20px;
 }
  
-.auth-container{
+/* ===== AUTH ===== */
+.auth-container {
   padding-bottom: 15px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
  
-input{
+.auth-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+ 
+.auth-card h2 {
+  margin-top: 0;
+}
+ 
+input {
   margin-bottom: 10px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px; 
+}
+ 
+button {
+  font-size: 15px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
 }
  
 .modal-overlay {
@@ -30,6 +64,7 @@ input{
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 20px;
 }
  
 .modal {
@@ -37,7 +72,43 @@ input{
   padding: 2rem;
   border-radius: 12px;
   text-align: center;
-  min-width: 300px;
+  width: 100%;
+  max-width: 340px;
+}
+ 
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 20px 20px 10px;
+  background-color: rgb(155, 169, 169);
+  z-index: 100;
+}
+ 
+.sidebar button {
+  width: 100%;
+  padding: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+ 
+.layout {
+  display: flex;
+  width: 100%;
+  padding: 20px;
+  margin-left: 180px;
+  box-sizing: border-box;
+  max-width: 900px;
+}
+ 
+.main-content {
+  max-width: 700px;
+  width: 100%;
 }
  
 .feed-container {
@@ -54,38 +125,6 @@ input{
   text-decoration: underline;
 }
  
-.load-more-btn {
-  width: 100%;
-  padding: 10px;
-  margin: 20px 0;
-  cursor: pointer;
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
- 
-/* Modal Styles */
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  width: 400px;
-  border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-}
- 
-.comment-list {
-  max-height: 200px;
-  overflow-y: auto;
-}
- 
-.comment-input-section {
-  margin-top: 15px;
-}
- 
-.comment-input-field {
-  width: 70%;
-}
- 
 .post {
   border: 1px solid gray;
   padding: 12px;
@@ -98,7 +137,7 @@ input{
   word-break: break-word;
   overflow: hidden;
   max-width: 100%;
-  box-sizing: border-box;
+  background: white;
 }
  
 .post-header {
@@ -120,41 +159,6 @@ input{
   color: rgb(84, 84, 84);
 }
  
-.overlayStyle {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
- 
-.modalStyle {
-  background-color: white;
-  padding: 20px;
-  width: 400px;
-  border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
-  max-height: 80vh;
-  overflow-y: auto;
-}
- 
-textarea {
-  width: 100%;
-  resize: none;
-  box-sizing: border-box;
-}
- 
-.post-image {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-}
- 
 .like-button {
   background: transparent;
   border: none;
@@ -171,36 +175,144 @@ textarea {
   display: block;
 }
  
-.layout {
-  display: flex;
+.post-image {
   width: 100%;
-  padding: 20px;
-  margin-left: 180px;
-  box-sizing: border-box;
-  max-width: 900px;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
 }
  
-.main-content {
-  max-width: 700px;
-  width: 100%;
-}
- 
-.sidebar {
+.overlayStyle {
   position: fixed;
   top: 0;
   left: 0;
-  height: 100vh;
-  width: 180px;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px 20px 20px 10px;
-  background-color: rgb(155, 169, 169);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 16px;
 }
  
-.sidebar button {
+.modalStyle {
+  background-color: white;
+  padding: 20px;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+ 
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+}
+ 
+textarea {
+  width: 100%;
+  resize: none;
+  box-sizing: border-box;
+  font-size: 16px; 
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+ 
+.load-more-btn {
   width: 100%;
   padding: 10px;
-  text-align: left;
+  margin: 20px 0;
   cursor: pointer;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+ 
+.comment-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+ 
+.comment-input-section {
+  margin-top: 15px;
+}
+ 
+.comment-input-field {
+  width: 70%;
+}
+ 
+/* ===== MOBILE ===== */
+@media (max-width: 600px) {
+
+  .sidebar {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 10px;
+    gap: 0;
+  }
+ 
+  .sidebar button {
+    width: auto;
+    flex: 1;
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 13px;
+  }
+ 
+  .layout {
+    margin-left: 0;
+    padding: 12px 12px 80px 12px;
+    max-width: 100%;
+  }
+ 
+  .main-content {
+    max-width: 100%;
+  }
+ 
+  .feed-container {
+    max-width: 100%;
+  }
+ 
+  .modalStyle {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 12px 12px 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+  }
+ 
+  .overlayStyle {
+    align-items: flex-end;
+    padding: 0;
+  }
+ 
+  .modal {
+    max-width: 100%;
+    border-radius: 12px;
+  }
+ 
+  .auth-card {
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+ 
+  button {
+    min-height: 40px;
+  }
 }
