@@ -38,7 +38,7 @@ function App() {
         {showWelcome && (
           <div className="modal-overlay">
             <div className="modal">
-              <h2>Welcome 👋</h2>
+              <h2>Welcome </h2>
               <p>Please login or create an account to continue.</p>
 
               <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem", justifyContent: "center" }}>
@@ -88,10 +88,10 @@ function App() {
   return (
     <>
       <div className="sidebar">
-        <button onClick={() => setView("feed")}>🏠 Feed</button>
-        <button onClick={() => setView("profile")}>👤 Profile</button>
-        <button onClick={() => setShowPostModal(true)}>✏️ Post</button>
-        <button onClick={logout}>🚪 Logout</button>
+        <button onClick={() => setView("feed")}> Feed</button>
+        <button onClick={() => setView("profile")}> Profile</button>
+        <button onClick={() => setShowPostModal(true)}> Post</button>
+        <button onClick={logout}> Logout</button>
       </div>
 
       <div className="layout">
