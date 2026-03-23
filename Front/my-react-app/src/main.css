@@ -96,7 +96,8 @@ button {
 }
  
 .layout {
-  display: block;
+  display: flex;
+  justify-content: center;
   width: calc(100vw - 180px);
   max-width: 900px;
   padding: 20px;
