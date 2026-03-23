@@ -5,8 +5,6 @@
 body {
   background-color: rgb(175, 189, 189);
   margin: 0;
-  display: flex;
-  justify-content: center;
   font-family: sans-serif;
 }
  
@@ -98,26 +96,24 @@ button {
 }
  
 .layout {
-  display: flex;
-  width: 100%;
+  display: block;
+  width: calc(100vw - 180px);
+  max-width: 900px;
   padding: 20px;
   margin-left: 180px;
   box-sizing: border-box;
-  max-width: 900px;
 }
  
 .main-content {
-  max-width: 700px;
   width: 100%;
-  flex: 1;
-  min-width: 0;
+  max-width: 700px;
+  box-sizing: border-box;
 }
  
 .feed-container {
   margin-bottom: 20px;
-  max-width: 700px;
   width: 100%;
-  min-width: 0;
+  max-width: 700px;
   box-sizing: border-box;
 }
  
@@ -282,22 +278,23 @@ textarea {
   }
  
   .layout {
+    display: block;
+    width: 100vw;
+    max-width: 100%;
     margin-left: 0;
     padding: 0 0 80px 0;
-    max-width: 100%;
+    box-sizing: border-box;
   }
  
   .main-content {
-    max-width: 100%;
     width: 100%;
-    flex: 1;
-    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
  
   .feed-container {
-    max-width: 100%;
     width: 100%;
-    min-width: 0;
+    max-width: 100%;
     padding: 0 12px;
     box-sizing: border-box;
   }
