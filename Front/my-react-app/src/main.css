@@ -138,6 +138,7 @@ button {
   overflow: hidden;
   max-width: 100%;
   background: white;
+  height: 220px;
 }
  
 .post-header {
@@ -250,7 +251,7 @@ textarea {
  
 /* ===== MOBILE ===== */
 @media (max-width: 600px) {
-
+ 
   .sidebar {
     top: auto;
     bottom: 0;
@@ -295,6 +296,17 @@ textarea {
     left: 0;
     right: 0;
     margin: 0;
+  }
+ 
+  .post {
+    margin: 8px 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
   }
  
   .overlayStyle {
