@@ -88,13 +88,13 @@ export default function Feed({ userId, openUserProfile, showPostModal, setShowPo
       <div style={{ marginBottom: "15px" }}>
         <button
           onClick={() => { setFeedType("all"); setSkip(0); }}
-          style={{ marginRight: "10px", fontWeight: feedType === "all" ? "bold" : "normal" }}
+          style={{ marginRight: "10px", fontWeight: feedType === "all" ? "bold" : "normal", width: "140px" }}
         >
           All Feed
         </button>
         <button
           onClick={() => { setFeedType("following"); setSkip(0); }}
-          style={{ fontWeight: feedType === "following" ? "bold" : "normal" }}
+          style={{ fontWeight: feedType === "following" ? "bold" : "normal", width: "140px" }}
         >
           Following Feed
         </button>
