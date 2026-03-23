@@ -101,7 +101,7 @@ export default function Feed({ userId, openUserProfile, showPostModal, setShowPo
       </div>
 
       {/*Posts*/}
-      <div style={{ marginTop: "30px" }}>
+      <div style={{ marginTop: "30px", width: "100%", boxSizing: "border-box" }}>
         {posts.map((p, index) => {
           const isLast = index === posts.length - 1;
           return (

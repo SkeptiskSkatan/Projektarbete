@@ -137,8 +137,10 @@ button {
   gap: 6px;
   word-break: break-word;
   overflow: hidden;
+  width: 100%;
   max-width: 100%;
   background: white;
+  box-sizing: border-box;
 }
  
 .post-header {
